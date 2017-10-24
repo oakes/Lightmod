@@ -20,6 +20,8 @@
              [onUndo [javafx.event.ActionEvent] void]
              [onRedo [javafx.event.ActionEvent] void]
              [onInstaRepl [javafx.event.ActionEvent] void]
+             [onFind [javafx.scene.input.KeyEvent] void]
+             [onClose [javafx.event.ActionEvent] void]
              [onDarkTheme [javafx.event.ActionEvent] void]
              [onLightTheme [javafx.event.ActionEvent] void]
              [onFontDec [javafx.event.ActionEvent] void]

@@ -1,13 +1,15 @@
 (ns lightmod.core
   (:require [clojure.java.io :as io]
             [lightmod.controller :as c]
+            [lightmod.game :as g]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
-            [nightcode.state :refer [pref-state runtime-state]])
+            [nightcode.state :as s :refer [pref-state runtime-state]])
   (:import [javafx.application Application]
            [javafx.fxml FXMLLoader]
            [javafx.stage Stage]
-           [javafx.scene Scene])
+           [javafx.scene Scene]
+           [java.util.prefs Preferences])
   (:gen-class :extends javafx.application.Application))
 
 (def actions {:#up c/up!
@@ -24,10 +26,22 @@
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
         scene (Scene. root 1242 768)]
     (swap! runtime-state assoc :stage stage)
+    (intern 'nightcode.state 'prefs (.node (Preferences/userRoot) "lightmod"))
+    (swap! pref-state assoc :theme (s/read-pref :theme :light))
     (doto stage
       (.setTitle "Lightmod 1.0.0")
       (.setScene scene)
       (.show))
+    (let [editors (.lookup scene "#editors")
+          dir (io/file (System/getProperty "user.home") "Lightmod" "hello-world")
+          file (io/file dir "core.cljs")
+          path (.getCanonicalPath file)]
+      (when-let [pane (or (get-in @runtime-state [:editor-panes path])
+                          (e/editor-pane pref-state runtime-state file))]
+        (-> editors .getChildren (.add pane))
+        (swap! runtime-state update :editor-panes assoc path pane)
+        (swap! runtime-state assoc :project-dir (.getCanonicalPath dir))))
+    (g/init-game! scene)
     ;(shortcuts/init-tabs! scene)
     ; create listeners
     ;(shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)

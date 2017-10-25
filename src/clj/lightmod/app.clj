@@ -1,5 +1,6 @@
 (ns lightmod.app
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
@@ -34,12 +35,39 @@
     (spit dest (slurp (io/resource from)))
     (str ".out/" from)))
 
+(defn sanitize-name [s ns?]
+  (-> s
+      str/lower-case
+      (str/replace
+        (if ns?
+          #"[ _]"
+          #"[ \-]")
+        (if ns?
+          "-"
+          "_"))
+      (str/replace #"[^a-z0-9\-]" "")))
+
+(defn path->ns [path leaf-name]
+  (-> path io/file .getName (sanitize-name true) (str "." leaf-name)))
+
+(defn start-server! [scene project-dir port]
+  (when-let [server (get-in @runtime-state [:servers project-dir])]
+    (.stop server))
+  (load-file (.getCanonicalPath (io/file project-dir "server.clj")))
+  (let [-main (resolve (symbol (path->ns project-dir "server") "-main"))
+        server (-main "--port" (str port))
+        port (-> server .getConnectors (aget 0) .getLocalPort)]
+    (swap! runtime-state assoc-in [:servers project-dir] server)
+    (-> (.lookup scene "#app")
+        .getEngine
+        (.load (str "http://localhost:" port "/")))))
+
 (defn init-app! [scene dir]
   (System/setProperty "user.dir" dir)
   (build dir
     {:output-to (.getCanonicalPath (io/file dir "main.js"))
      :output-dir (.getCanonicalPath (io/file dir ".out"))
-     :main (str (.getName (io/file dir)) ".client")
+     :main (path->ns dir "client")
      :asset-path ".out"
      :foreign-libs (mapv #(update % :file copy-from-resources! dir)
                      [{:file "js/p5.js"
@@ -65,11 +93,5 @@
                 ["cljsjs/react/common/react.ext.js"
                  "cljsjs/create-react-class/common/create-react-class.ext.js"
                  "cljsjs/react-dom/common/react-dom.ext.js"])})
-  (load-file (.getCanonicalPath (io/file dir "server.clj")))
-  (let [game (.lookup scene "#game")
-        engine (.getEngine game)
-        server ((resolve (symbol (str (.getName (io/file dir)) ".server") "-main")))
-        port (-> server .getConnectors (aget 0) .getLocalPort)]
-    (swap! runtime-state assoc-in [:ports dir] port)
-    (.load engine (str "http://localhost:" port "/"))))
+  (start-server! scene dir 0))
 

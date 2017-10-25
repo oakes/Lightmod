@@ -16,7 +16,6 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.web.WebView?>
 
-
 <SplitPane dividerPositions="0.5" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lightmod.controller">
   <items>
     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
@@ -26,6 +25,7 @@
                   <HBox fx:id="project_buttons" VBox.vgrow="NEVER">
                      <children>
                         <Button mnemonicParsing="false" onAction="#onOpenInWebBrowser" text="Open in Web Browser" HBox.hgrow="NEVER" />
+                        <Button mnemonicParsing="false" onAction="#onRestart" text="Restart" />
                         <Separator maxWidth="1.7976931348623157E308" orientation="VERTICAL" visible="false" HBox.hgrow="ALWAYS" />
                         <MenuButton fx:id="settings" minWidth="-Infinity" mnemonicParsing="false" text="Settings" HBox.hgrow="NEVER">
                            <items>
@@ -58,7 +58,7 @@
                         </MenuButton>
                      </children>
                   </HBox>
-                  <WebView fx:id="game" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
+                  <WebView fx:id="app" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
                </children>
             </VBox>
          </children>

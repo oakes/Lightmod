@@ -30,7 +30,8 @@
              [onAutoSave [javafx.event.ActionEvent] void]
              [onNewFile [javafx.event.ActionEvent] void]
              [onOpenInFileBrowser [javafx.event.ActionEvent] void]
-             [onOpenInWebBrowser [javafx.event.ActionEvent] void]]))
+             [onOpenInWebBrowser [javafx.event.ActionEvent] void]
+             [onRestart [javafx.event.ActionEvent] void]]))
 
 ; remove
 
@@ -236,12 +237,23 @@
 ; open in browser
 
 (defn open-in-web-browser! [^Scene scene]
-  (when-let [port (get-in @runtime-state [:ports (:current-project @runtime-state)])]
-    (javax.swing.SwingUtilities/invokeLater
-      (fn []
-        (when (Desktop/isDesktopSupported)
-          (.browse (Desktop/getDesktop) (java.net.URI. (str "http://localhost:" port "/"))))))))
+  (when-let [server (get-in @runtime-state [:servers (:current-project @runtime-state)])]
+    (let [port (-> server .getConnectors (aget 0) .getLocalPort)]
+      (javax.swing.SwingUtilities/invokeLater
+        (fn []
+          (when (Desktop/isDesktopSupported)
+            (.browse (Desktop/getDesktop) (java.net.URI. (str "http://localhost:" port "/")))))))))
 
 (defn -onOpenInWebBrowser [this ^ActionEvent event]
   (-> event .getSource .getScene open-in-web-browser!))
+
+; restart
+
+(defn restart! [^Scene scene]
+  (let [server (get-in @runtime-state [:servers (:current-project @runtime-state)])
+        port (-> server .getConnectors (aget 0) .getLocalPort)]
+      (a/start-server! scene (:current-project @runtime-state) port)))
+
+(defn -onRestart [this ^ActionEvent event]
+  (-> event .getSource .getScene restart!))
 

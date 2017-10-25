@@ -32,7 +32,7 @@
       (.setTitle "Lightmod 1.0.0")
       (.setScene scene)
       (.show))
-    (let [dir (io/file (System/getProperty "user.home") "Lightmod" "hello-world")
+    (let [dir (io/file (System/getProperty "user.home") "Lightmod" "hello_world")
           file (io/file dir "client.cljs")
           path (.getCanonicalPath file)]
       (swap! runtime-state assoc :current-project (.getCanonicalPath dir))
@@ -40,6 +40,7 @@
       (a/init-app! scene (.getCanonicalPath dir))
       (a/update-editor! scene))
     (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
+    (-> scene (.lookup "#app") (.setContextMenuEnabled false))
     ; apply the prefs
     (let [theme-buttons (->> (.lookup scene "#settings")
                              .getItems

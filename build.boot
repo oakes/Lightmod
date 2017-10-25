@@ -3,16 +3,9 @@
   :resource-paths #{"resources"}
   :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
-                  ; cljs deps
                   [org.clojure/clojurescript "1.9.946"]
-                  [paren-soup "2.9.0" :scope "test"]
-                  [mistakes-were-made "1.7.3" :scope "test"]
-                  [cljsjs/codemirror "5.24.0-1" :scope "test"]
                   [play-cljs "0.10.1"]
-                  ; clj deps
                   [org.clojure/clojure "1.9.0-beta2"]
-                  [ring "1.6.1"]
-                  [eval-soup "1.2.3" :exclusions [org.clojure/core.async]]
                   [nightcode "2.4.0" :exclusions [leiningen
                                                   play-cljs/lein-template
                                                   org.eclipse.jgit/org.eclipse.jgit]]])

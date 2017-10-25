@@ -23,7 +23,7 @@
        :version "1.0.0"}
   aot {:namespace '#{lightmod.core}}
   jar {:main 'lightmod.core
-       :manifest {"Description" "A tool for making live-moddable games in ClojureScript"
+       :manifest {"Description" "A starter kit for full-stack Clojure(Script)"
                   "Url" "https://github.com/oakes/Lightmod"}
        :file "project.jar"})
 

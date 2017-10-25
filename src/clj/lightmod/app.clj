@@ -1,4 +1,4 @@
-(ns lightmod.game
+(ns lightmod.app
   (:require [clojure.java.io :as io]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.middleware.resource :refer [wrap-resource]]

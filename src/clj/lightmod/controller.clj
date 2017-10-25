@@ -5,7 +5,7 @@
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.utils :as u]
             [eval-soup.core :as es]
-            [lightmod.game :as g])
+            [lightmod.app :as a])
   (:import [javafx.event ActionEvent]
            [javafx.scene.control Alert Alert$AlertType ButtonType TextInputDialog]
            [javafx.stage DirectoryChooser FileChooser StageStyle Window Modality]
@@ -71,7 +71,7 @@
   (when-let [path (:selection @pref-state)]
     (->> path io/file .getParentFile .getCanonicalPath
          (swap! pref-state assoc :selection))
-    (g/update-editor! scene)))
+    (a/update-editor! scene)))
 
 (defn -onUp [this ^ActionEvent event]
   (-> event .getSource .getScene up!))

@@ -1,7 +1,7 @@
 (ns lightmod.core
   (:require [clojure.java.io :as io]
             [lightmod.controller :as c]
-            [lightmod.game :as g]
+            [lightmod.app :as a]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
             [nightcode.state :as s :refer [pref-state runtime-state]])
@@ -25,7 +25,7 @@
 (defn -start [^lightmod.core app ^Stage stage]
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
         scene (Scene. root 1242 768)]
-    (swap! runtime-state assoc :stage stage :game-port (g/start-web-server!))
+    (swap! runtime-state assoc :stage stage :game-port (a/start-web-server!))
     (intern 'nightcode.state 'prefs (.node (Preferences/userRoot) "lightmod"))
     (swap! pref-state assoc :theme (s/read-pref :theme :light))
     (doto stage
@@ -37,8 +37,8 @@
           path (.getCanonicalPath file)]
       (swap! runtime-state assoc :project-dir (.getCanonicalPath dir))
       (swap! pref-state assoc :selection (.getCanonicalPath file))
-      (g/init-game! scene (:game-port @runtime-state))
-      (g/update-editor! scene))
+      (a/init-game! scene (:game-port @runtime-state))
+      (a/update-editor! scene))
     (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
     ; apply the prefs
     (let [theme-buttons (->> (.lookup scene "#settings")

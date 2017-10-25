@@ -25,25 +25,20 @@
 (defn -start [^lightmod.core app ^Stage stage]
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
         scene (Scene. root 1242 768)]
-    (swap! runtime-state assoc :stage stage)
+    (swap! runtime-state assoc :stage stage :game-port (g/start-web-server!))
     (intern 'nightcode.state 'prefs (.node (Preferences/userRoot) "lightmod"))
     (swap! pref-state assoc :theme (s/read-pref :theme :light))
     (doto stage
       (.setTitle "Lightmod 1.0.0")
       (.setScene scene)
       (.show))
-    (let [editors (.lookup scene "#editors")
-          dir (io/file (System/getProperty "user.home") "Lightmod" "hello-world")
+    (let [dir (io/file (System/getProperty "user.home") "Lightmod" "hello-world")
           file (io/file dir "core.cljs")
-          path (.getCanonicalPath file)
-          game-port (g/start-web-server!)]
-      (when-let [pane (or (get-in @runtime-state [:editor-panes path])
-                          (e/editor-pane pref-state runtime-state file))]
-        (-> editors .getChildren (.add pane))
-        (swap! runtime-state update :editor-panes assoc path pane)
-        (swap! runtime-state assoc :project-dir (.getCanonicalPath dir) :game-port game-port)
-        (swap! pref-state assoc :selection path))
-      (g/init-game! scene game-port))
+          path (.getCanonicalPath file)]
+      (swap! runtime-state assoc :project-dir (.getCanonicalPath dir))
+      (swap! pref-state assoc :selection (.getCanonicalPath file))
+      (g/init-game! scene (:game-port @runtime-state))
+      (g/update-editor! scene))
     (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
     ; apply the prefs
     (let [theme-buttons (->> (.lookup scene "#settings")

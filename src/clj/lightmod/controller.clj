@@ -4,7 +4,8 @@
             [nightcode.editors :as e]
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.utils :as u]
-            [eval-soup.core :as es])
+            [eval-soup.core :as es]
+            [lightmod.game :as g])
   (:import [javafx.event ActionEvent]
            [javafx.scene.control Alert Alert$AlertType ButtonType TextInputDialog]
            [javafx.stage DirectoryChooser FileChooser StageStyle Window Modality]
@@ -66,7 +67,11 @@
 
 ; up
 
-(defn up! [^Scene scene])
+(defn up! [^Scene scene]
+  (when-let [path (:selection @pref-state)]
+    (->> path io/file .getParentFile .getCanonicalPath
+         (swap! pref-state assoc :selection))
+    (g/update-editor! scene)))
 
 (defn -onUp [this ^ActionEvent event]
   (-> event .getSource .getScene up!))
@@ -146,7 +151,8 @@
             new-path (if (.isDirectory file)
                        path
                        (.getCanonicalPath (.getParentFile file)))]
-        (e/remove-editors! path runtime-state)))))
+        (e/remove-editors! path runtime-state)
+        (up! scene)))))
 
 (defn -onClose [this ^ActionEvent event]
   (-> event .getSource .getScene close!))

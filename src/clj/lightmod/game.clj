@@ -5,8 +5,31 @@
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.util.response :refer [redirect not-found]]
             [ring.util.request :refer [body-string]]
-            [nightcode.state :refer [runtime-state]]
-            [cljs.build.api :refer [build]]))
+            [nightcode.state :refer [pref-state runtime-state]]
+            [nightcode.editors :as e]
+            [nightcode.shortcuts :as shortcuts]
+            [cljs.build.api :refer [build]])
+  (:import [javafx.application Platform]
+           [javafx.fxml FXMLLoader]))
+
+(defn update-editor! [scene]
+  (when-let [path (:selection @pref-state)]
+    (let [file (io/file path)]
+      (when-let [pane (or (when (.isDirectory file)
+                            (doto (FXMLLoader/load (io/resource "dir.fxml"))
+                              (shortcuts/add-tooltips! [:#up :#new_file :#open_in_file_browser :#close])))
+                          (get-in @runtime-state [:editor-panes path])
+                          (when-let [new-editor (e/editor-pane pref-state runtime-state file)]
+                            (swap! runtime-state update :editor-panes assoc path new-editor)
+                            new-editor))]
+        (doto (.getChildren (.lookup scene "#editors"))
+          (.clear)
+          (.add pane))
+        (.setDisable (.lookup scene "#up") (= path (:project-dir @runtime-state)))
+        (.setDisable (.lookup scene "#close") (.isDirectory file))
+        (Platform/runLater
+          (fn []
+            (some-> (.lookup pane "#webview") .requestFocus)))))))
 
 (def redirects {"/" "/index.html"
                 "/main.js" "/.out/main.js"})

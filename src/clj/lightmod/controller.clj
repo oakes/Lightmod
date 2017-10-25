@@ -30,7 +30,7 @@
              [onAutoSave [javafx.event.ActionEvent] void]
              [onNewFile [javafx.event.ActionEvent] void]
              [onOpenInFileBrowser [javafx.event.ActionEvent] void]
-             [onOpenInBrowser [javafx.event.ActionEvent] void]]))
+             [onOpenInWebBrowser [javafx.event.ActionEvent] void]]))
 
 ; remove
 
@@ -235,13 +235,13 @@
 
 ; open in browser
 
-(defn open-in-browser! [^Scene scene]
+(defn open-in-web-browser! [^Scene scene]
   (when-let [port (:game-port @runtime-state)]
     (javax.swing.SwingUtilities/invokeLater
       (fn []
         (when (Desktop/isDesktopSupported)
           (.browse (Desktop/getDesktop) (java.net.URI. (str "http://localhost:" port "/"))))))))
 
-(defn -onOpenInBrowser [this ^ActionEvent event]
-  (-> event .getSource .getScene open-in-browser!))
+(defn -onOpenInWebBrowser [this ^ActionEvent event]
+  (-> event .getSource .getScene open-in-web-browser!))
 

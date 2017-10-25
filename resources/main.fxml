@@ -25,7 +25,7 @@
                <children>
                   <HBox fx:id="project_buttons" VBox.vgrow="NEVER">
                      <children>
-                        <Button mnemonicParsing="false" onAction="#onOpenInBrowser" text="Open in Browser" HBox.hgrow="NEVER" />
+                        <Button mnemonicParsing="false" onAction="#onOpenInWebBrowser" text="Open in Web Browser" HBox.hgrow="NEVER" />
                         <Separator maxWidth="1.7976931348623157E308" orientation="VERTICAL" visible="false" HBox.hgrow="ALWAYS" />
                         <MenuButton fx:id="settings" minWidth="-Infinity" mnemonicParsing="false" text="Settings" HBox.hgrow="NEVER">
                            <items>

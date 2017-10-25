@@ -8,6 +8,7 @@
                   [paren-soup "2.9.0" :scope "test"]
                   [mistakes-were-made "1.7.3" :scope "test"]
                   [cljsjs/codemirror "5.24.0-1" :scope "test"]
+                  [play-cljs "0.10.1"]
                   ; clj deps
                   [org.clojure/clojure "1.9.0-beta2"]
                   [ring "1.6.1"]

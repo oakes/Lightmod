@@ -5,11 +5,14 @@
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.util.response :refer [redirect not-found]]
             [ring.util.request :refer [body-string]]
-            [nightcode.state :refer [runtime-state]]))
+            [nightcode.state :refer [runtime-state]]
+            [cljs.build.api :refer [build]]))
 
 (defn handler [request]
-  (or (when (= "/" (:uri request))
-        (redirect "/index.html"))
+  (or (case (:uri request)
+        "/" (redirect "/index.html")
+        "/main.js" (redirect ".out/main.js")
+        nil)
       (let [uri (:uri request)
             uri (if (.startsWith uri "/") (subs uri 1) uri)
             file (io/file (:project-dir @runtime-state) uri)]
@@ -27,6 +30,12 @@
       .getLocalPort))
 
 (defn init-game! [scene]
+  (let [dir (:project-dir @runtime-state)]
+    (build dir
+      {:output-to (.getCanonicalPath (io/file dir ".out" "main.js"))
+       :output-dir (.getCanonicalPath (io/file dir ".out"))
+       :main (str (.getName (io/file dir)) ".core")
+       :asset-path ".out"}))
   (let [port (start-web-server!)
         game (.lookup scene "#game")
         engine (.getEngine game)]

@@ -22,9 +22,11 @@
                           (when-let [new-editor (e/editor-pane pref-state runtime-state file)]
                             (swap! runtime-state update :editor-panes assoc path new-editor)
                             new-editor))]
-        (doto (.getChildren (.lookup scene "#editors"))
-          (.clear)
-          (.add pane))
+        (let [editors (.lookup scene "#editors")]
+          (shortcuts/hide-tooltips! editors)
+          (doto (.getChildren editors)
+            (.clear)
+            (.add pane)))
         (.setDisable (.lookup scene "#up") (= path (:project-dir @runtime-state)))
         (.setDisable (.lookup scene "#close") (.isDirectory file))
         (Platform/runLater

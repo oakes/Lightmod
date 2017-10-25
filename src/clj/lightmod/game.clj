@@ -36,7 +36,7 @@
     (spit dest (slurp (io/resource from)))
     (str ".out/" from)))
 
-(defn init-game! [scene]
+(defn init-game! [scene port]
   (let [dir (:project-dir @runtime-state)]
     (System/setProperty "user.dir" dir)
     (build dir
@@ -68,8 +68,7 @@
                   ["cljsjs/react/common/react.ext.js"
                    "cljsjs/create-react-class/common/create-react-class.ext.js"
                    "cljsjs/react-dom/common/react-dom.ext.js"])}))
-  (let [port (start-web-server!)
-        game (.lookup scene "#game")
+  (let [game (.lookup scene "#game")
         engine (.getEngine game)]
     (.load engine (str "http://localhost:" port "/"))))
 

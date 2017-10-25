@@ -1,26 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckMenuItem?>
+<?import javafx.scene.control.CustomMenuItem?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.web.WebView?>
 
 
-<AnchorPane xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lightmod.controller">
-   <children>
-      <SplitPane dividerPositions="0.5" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-        <items>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+<SplitPane dividerPositions="0.5" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lightmod.controller">
+  <items>
+    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+         <children>
+            <VBox AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <children>
-                  <WebView fx:id="game" layoutY="38.0" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+                  <HBox fx:id="project_buttons" VBox.vgrow="NEVER">
+                     <children>
+                        <Button mnemonicParsing="false" onAction="#onOpenInBrowser" text="Open in Browser" HBox.hgrow="NEVER" />
+                        <Separator maxWidth="1.7976931348623157E308" orientation="VERTICAL" visible="false" HBox.hgrow="ALWAYS" />
+                        <MenuButton fx:id="settings" minWidth="-Infinity" mnemonicParsing="false" text="Settings" HBox.hgrow="NEVER">
+                           <items>
+                              <CustomMenuItem fx:id="theme_buttons" hideOnClick="false" mnemonicParsing="false" text="Unspecified Action">
+                                 <content>
+                                    <HBox>
+                                       <children>
+                                          <ToggleButton minWidth="-Infinity" mnemonicParsing="false" onAction="#onDarkTheme" text="Dark">
+                                             <toggleGroup>
+                                                <ToggleGroup fx:id="theme" />
+                                             </toggleGroup>
+                                          </ToggleButton>
+                                          <ToggleButton minWidth="-Infinity" mnemonicParsing="false" onAction="#onLightTheme" text="Light" toggleGroup="$theme" />
+                                       </children>
+                                    </HBox>
+                                 </content>
+                              </CustomMenuItem>
+                              <CustomMenuItem hideOnClick="false" mnemonicParsing="false" text="Unspecified Action">
+                                 <content>
+                                    <HBox>
+                                       <children>
+                                          <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#onFontDec" text="Font -" />
+                                          <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#onFontInc" text="Font +" />
+                                       </children>
+                                    </HBox>
+                                 </content>
+                              </CustomMenuItem>
+                              <CheckMenuItem fx:id="auto_save" mnemonicParsing="false" onAction="#onAutoSave" text="Auto Save" />
+                           </items>
+                        </MenuButton>
+                     </children>
+                  </HBox>
+                  <WebView fx:id="game" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />
                </children>
-            </AnchorPane>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
-               <children>
-                  <StackPane fx:id="editors" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
-               </children>
-            </AnchorPane>
-        </items>
-      </SplitPane>
-   </children>
-</AnchorPane>
+            </VBox>
+         </children>
+      </AnchorPane>
+    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="160.0" prefWidth="100.0">
+         <children>
+            <TabPane side="RIGHT" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+               <tabs>
+                  <Tab closable="false" text="Files">
+                     <content>
+                        <StackPane fx:id="editors" />
+                     </content>
+                  </Tab>
+               </tabs>
+            </TabPane>
+         </children>
+      </AnchorPane>
+  </items>
+</SplitPane>

@@ -28,7 +28,8 @@
              [onFontInc [javafx.event.ActionEvent] void]
              [onAutoSave [javafx.event.ActionEvent] void]
              [onNewFile [javafx.event.ActionEvent] void]
-             [onOpenInFileBrowser [javafx.event.ActionEvent] void]]))
+             [onOpenInFileBrowser [javafx.event.ActionEvent] void]
+             [onOpenInBrowser [javafx.event.ActionEvent] void]]))
 
 ; remove
 
@@ -155,7 +156,7 @@
 (defn dark-theme! [^Scene scene]
   (swap! pref-state assoc :theme :dark)
   (-> scene .getStylesheets (.add "dark.css"))
-  #_(p/update-webviews! @pref-state @runtime-state))
+  (u/update-webviews! @pref-state @runtime-state))
 
 (defn -onDarkTheme [this ^ActionEvent event]
   (-> @runtime-state :stage .getScene dark-theme!))
@@ -163,7 +164,7 @@
 (defn light-theme! [^Scene scene]
   (swap! pref-state assoc :theme :light)
   (-> scene .getStylesheets .clear)
-  #_(p/update-webviews! @pref-state @runtime-state))
+  (u/update-webviews! @pref-state @runtime-state))
 
 (defn -onLightTheme [this ^ActionEvent event]
   (-> @runtime-state :stage .getScene light-theme!))
@@ -172,7 +173,7 @@
 
 (defn font! [^Scene scene]
   (-> scene .getRoot (.setStyle (str "-fx-font-size: " (u/normalize-text-size (:text-size @pref-state)))))
-  #_(p/update-webviews! @pref-state @runtime-state))
+  (u/update-webviews! @pref-state @runtime-state))
 
 (defn font-dec! [^Scene scene]
   (swap! pref-state update :text-size #(-> % (- 2) u/normalize-text-size))
@@ -225,4 +226,16 @@
 
 (defn -onOpenInFileBrowser [this ^ActionEvent event]
   (-> event .getSource .getScene open-in-file-browser!))
+
+; open in browser
+
+(defn open-in-browser! [^Scene scene]
+  (when-let [port (:game-port @runtime-state)]
+    (javax.swing.SwingUtilities/invokeLater
+      (fn []
+        (when (Desktop/isDesktopSupported)
+          (.browse (Desktop/getDesktop) (java.net.URI. (str "http://localhost:" port "/"))))))))
+
+(defn -onOpenInBrowser [this ^ActionEvent event]
+  (-> event .getSource .getScene open-in-browser!))
 

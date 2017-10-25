@@ -35,18 +35,18 @@
     (let [editors (.lookup scene "#editors")
           dir (io/file (System/getProperty "user.home") "Lightmod" "hello-world")
           file (io/file dir "core.cljs")
-          path (.getCanonicalPath file)]
+          path (.getCanonicalPath file)
+          game-port (g/start-web-server!)]
       (when-let [pane (or (get-in @runtime-state [:editor-panes path])
                           (e/editor-pane pref-state runtime-state file))]
         (-> editors .getChildren (.add pane))
         (swap! runtime-state update :editor-panes assoc path pane)
-        (swap! runtime-state assoc :project-dir (.getCanonicalPath dir))
-        (swap! pref-state assoc :selection path)))
-    (g/init-game! scene)
+        (swap! runtime-state assoc :project-dir (.getCanonicalPath dir) :game-port game-port)
+        (swap! pref-state assoc :selection path))
+      (g/init-game! scene game-port))
     (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
     ; apply the prefs
-    #_
-    (let [theme-buttons (->> (.lookup scene "#start")
+    (let [theme-buttons (->> (.lookup scene "#settings")
                              .getItems
                              (filter #(= "theme_buttons" (.getId %)))
                              first
@@ -57,8 +57,7 @@
         :light (.fire (.get theme-buttons 1))
         nil))
     (c/font! scene)
-    #_
-    (let [auto-save-button (->> (.lookup scene "#start")
+    (let [auto-save-button (->> (.lookup scene "#settings")
                                 .getItems
                                 (filter #(= "auto_save" (.getId %)))
                                 first)]

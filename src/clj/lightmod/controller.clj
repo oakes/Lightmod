@@ -38,12 +38,11 @@
         get-engine #(-> % get-pane (.lookup "#webview") .getEngine)
         unsaved? #(-> % get-engine (.executeScript "isClean()") not)
         unsaved-paths (filter unsaved? paths-to-delete)]
-    #_
     (or (empty? unsaved-paths)
         (->> (map #(-> % io/file .getName) unsaved-paths)
              (str/join \newline)
              (str "The below files are not saved. Proceed?" \newline \newline)
-             (p/show-warning! scene "Unsaved Files")))))
+             (u/show-warning! scene "Unsaved Files")))))
 
 (defn remove! [^Scene scene]
   (let [{:keys [project-set selection]} @pref-state
@@ -66,12 +65,7 @@
 
 ; up
 
-(defn up! [^Scene scene]
-  #_
-  (when-let [path (:selection @pref-state)]
-    (let [project-tree (.lookup scene "#project_tree")]
-      (->> path io/file .getParentFile .getCanonicalPath
-           (p/update-project-tree! pref-state project-tree)))))
+(defn up! [^Scene scene])
 
 (defn -onUp [this ^ActionEvent event]
   (-> event .getSource .getScene up!))
@@ -150,8 +144,7 @@
       (let [file (io/file path)
             new-path (if (.isDirectory file)
                        path
-                       (.getCanonicalPath (.getParentFile file)))
-            project-tree (.lookup scene "#project_tree")]
+                       (.getCanonicalPath (.getParentFile file)))]
         (e/remove-editors! path runtime-state)))))
 
 (defn -onClose [this ^ActionEvent event]

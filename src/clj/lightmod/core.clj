@@ -40,11 +40,10 @@
                           (e/editor-pane pref-state runtime-state file))]
         (-> editors .getChildren (.add pane))
         (swap! runtime-state update :editor-panes assoc path pane)
-        (swap! runtime-state assoc :project-dir (.getCanonicalPath dir))))
+        (swap! runtime-state assoc :project-dir (.getCanonicalPath dir))
+        (swap! pref-state assoc :selection path)))
     (g/init-game! scene)
-    ;(shortcuts/init-tabs! scene)
-    ; create listeners
-    ;(shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
+    (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
     ; apply the prefs
     #_
     (let [theme-buttons (->> (.lookup scene "#start")

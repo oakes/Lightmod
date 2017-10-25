@@ -6,24 +6,15 @@
             [ring.util.response :refer [redirect not-found]]
             [ring.util.request :refer [body-string]]
             [nightcode.state :refer [runtime-state]]
-            [cljs.build.api :refer [build]]
-            [nightcode.utils :as u]))
+            [cljs.build.api :refer [build]]))
 
 (def redirects {"/" "/index.html"
                 "/main.js" "/.out/main.js"})
-
-(def ending-redirects {"/p5.js" "/.out/js/p5.js"
-                       "/p5.tiledmap.js" "/.out/js/p5.tiledmap.js"})
 
 (defn handler [request]
   (let [uri (:uri request)]
     (or (when-let [new-uri (redirects uri)]
           (redirect new-uri))
-        (when-let [new-uri (some (fn [[k v]]
-                                   (when (.endsWith uri k) v))
-                             ending-redirects)]
-          (when (not= uri new-uri)
-            (redirect new-uri)))
         (let [uri (if (.startsWith uri "/") (subs uri 1) uri)
               file (io/file (:project-dir @runtime-state) uri)]
           (when (.exists file)
@@ -39,23 +30,44 @@
       (aget 0)
       .getLocalPort))
 
+(defn copy-from-resources! [from to]
+  (let [dest (io/file to ".out" from)]
+    (.mkdirs (.getParentFile dest))
+    (spit dest (slurp (io/resource from)))
+    (str ".out/" from)))
+
 (defn init-game! [scene]
   (let [dir (:project-dir @runtime-state)]
+    (System/setProperty "user.dir" dir)
     (build dir
       {:output-to (.getCanonicalPath (io/file dir ".out" "main.js"))
        :output-dir (.getCanonicalPath (io/file dir ".out"))
        :main (str (.getName (io/file dir)) ".core")
        :asset-path ".out"
-       ; apparently :foreign-libs requires the paths to be relative
-       :foreign-libs [{:file (u/get-relative-path
-                               (.getCanonicalPath (io/file "."))
-                               (.getCanonicalPath (io/file dir ".out" "js" "p5.js")))
-                       :provides ["p5.core"]}
-                      {:file (u/get-relative-path
-                               (.getCanonicalPath (io/file "."))
-                               (.getCanonicalPath (io/file dir ".out" "js" "p5.tiledmap.js")))
-                       :provides ["p5.tiled-map"]
-                       :requires ["p5.core"]}]}))
+       :foreign-libs (mapv #(update % :file copy-from-resources! dir)
+                       [{:file "js/p5.js"
+                         :provides ["p5.core"]}
+                        {:file "js/p5.tiledmap.js"
+                         :provides ["p5.tiled-map"]
+                         :requires ["p5.core"]}
+                        {:file "cljsjs/react/development/react.inc.js"
+                         :provides ["react" "cljsjs.react"]
+                         :file-min ".out/cljsjs/react/production/react.min.inc.js"
+                         :global-exports '{react React}}
+                        {:file "cljsjs/create-react-class/development/create-react-class.inc.js"
+                         :provides ["cljsjs.create-react-class" "create-react-class"]
+                         :requires ["react"]
+                         :file-min "cljsjs/create-react-class/production/create-react-class.min.inc.js"
+                         :global-exports '{create-react-class createReactClass}}
+                        {:file "cljsjs/react-dom/development/react-dom.inc.js"
+                         :provides ["react-dom" "cljsjs.react.dom"]
+                         :requires ["react"]
+                         :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
+                         :global-exports '{react-dom ReactDOM}}])
+       :externs (mapv #(copy-from-resources! % dir)
+                  ["cljsjs/react/common/react.ext.js"
+                   "cljsjs/create-react-class/common/create-react-class.ext.js"
+                   "cljsjs/react-dom/common/react-dom.ext.js"])}))
   (let [port (start-web-server!)
         game (.lookup scene "#game")
         engine (.getEngine game)]

@@ -5,6 +5,7 @@
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
                   [org.clojure/clojurescript "1.9.946"]
                   [play-cljs "0.10.1"]
+                  [reagent "0.7.0"]
                   [org.clojure/clojure "1.9.0-beta2"]
                   [nightcode "2.4.0" :exclusions [leiningen
                                                   play-cljs/lein-template

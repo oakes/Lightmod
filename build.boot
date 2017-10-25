@@ -10,6 +10,7 @@
                   [compojure "1.6.0"]
                   [org.clojure/core.async "0.3.443"]
                   [com.rpl/specter "1.0.4"]
+                  [org.clojure/tools.cli "0.3.5"]
                   [org.clojure/clojure "1.9.0-beta2"]
                   [nightcode "2.4.0" :exclusions [leiningen
                                                   play-cljs/lein-template

@@ -236,7 +236,7 @@
 ; open in browser
 
 (defn open-in-web-browser! [^Scene scene]
-  (when-let [port (:game-port @runtime-state)]
+  (when-let [port (get-in @runtime-state [:ports (:current-project @runtime-state)])]
     (javax.swing.SwingUtilities/invokeLater
       (fn []
         (when (Desktop/isDesktopSupported)

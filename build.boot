@@ -6,6 +6,8 @@
                   [org.clojure/clojurescript "1.9.946"]
                   [play-cljs "0.10.1"]
                   [reagent "0.7.0"]
+                  [ring "1.6.2"]
+                  [compojure "1.6.0"]
                   [org.clojure/core.async "0.3.443"]
                   [com.rpl/specter "1.0.4"]
                   [org.clojure/clojure "1.9.0-beta2"]

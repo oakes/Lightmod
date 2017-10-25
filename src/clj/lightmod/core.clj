@@ -25,7 +25,7 @@
 (defn -start [^lightmod.core app ^Stage stage]
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
         scene (Scene. root 1242 768)]
-    (swap! runtime-state assoc :stage stage :game-port (a/start-web-server!))
+    (swap! runtime-state assoc :stage stage)
     (intern 'nightcode.state 'prefs (.node (Preferences/userRoot) "lightmod"))
     (swap! pref-state assoc :theme (s/read-pref :theme :light))
     (doto stage
@@ -33,11 +33,11 @@
       (.setScene scene)
       (.show))
     (let [dir (io/file (System/getProperty "user.home") "Lightmod" "hello-world")
-          file (io/file dir "core.cljs")
+          file (io/file dir "client.cljs")
           path (.getCanonicalPath file)]
-      (swap! runtime-state assoc :project-dir (.getCanonicalPath dir))
+      (swap! runtime-state assoc :current-project (.getCanonicalPath dir))
       (swap! pref-state assoc :selection (.getCanonicalPath file))
-      (a/init-game! scene (:game-port @runtime-state))
+      (a/init-app! scene (.getCanonicalPath dir))
       (a/update-editor! scene))
     (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
     ; apply the prefs

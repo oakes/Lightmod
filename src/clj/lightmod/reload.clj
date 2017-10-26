@@ -45,16 +45,11 @@
 (defn start-reload-server! [dir]
   (http/run-server (partial reload-handler dir) {:port 0}))
 
-(defn file-changed! [dir file out-dir compile-fn]
-  (if (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
-           (not (u/parent-path? out-dir (.getCanonicalPath file))))
-    (do
-      (compile-fn)
-      (send-message! dir {:type :visual}))
-    (->> file
-         .getCanonicalPath
-         (u/get-relative-path dir)
-         io/file
-         hash-set
-         (send-changed! dir))))
+(defn reload-file! [dir file]
+  (->> file
+       .getCanonicalPath
+       (u/get-relative-path dir)
+       io/file
+       hash-set
+       (send-changed! dir)))
 

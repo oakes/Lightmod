@@ -4,6 +4,7 @@
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
+            [nightcode.utils :as u]
             [cljs.build.api :refer [build]]
             [hawk.core :as hawk]
             [lightmod.reload :as lr])
@@ -77,7 +78,12 @@
                                                (when (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"])
                                                  (load-file (.getCanonicalPath file))
                                                  (lr/send-message! dir {:type :visual-clj}))
-                                               (lr/file-changed! dir file out-dir #(compile-cljs! scene dir))
+                                               (if (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
+                                                        (not (u/parent-path? out-dir (.getCanonicalPath file))))
+                                                 (do
+                                                   (compile-cljs! scene dir)
+                                                   (lr/send-message! dir {:type :visual}))
+                                                 (lr/reload-file! dir file))
                                                ctx)}])})
     (-> (.lookup scene "#app")
         .getEngine

@@ -78,7 +78,7 @@
                                                ctx)}])})
     (-> (.lookup scene "#app")
         .getEngine
-        (.load (str "http://localhost:" port "/")))))
+        (.load (str "http://localhost:" port "/index.html")))))
 
 (defn compile-cljs! [scene dir]
   (System/setProperty "user.dir" dir)

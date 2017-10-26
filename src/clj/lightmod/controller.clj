@@ -242,7 +242,7 @@
       (javax.swing.SwingUtilities/invokeLater
         (fn []
           (when (Desktop/isDesktopSupported)
-            (.browse (Desktop/getDesktop) (java.net.URI. (str "http://localhost:" port "/")))))))))
+            (.browse (Desktop/getDesktop) (java.net.URI. (str "http://localhost:" port "/index.html")))))))))
 
 (defn -onOpenInWebBrowser [this ^ActionEvent event]
   (-> event .getSource .getScene open-in-web-browser!))

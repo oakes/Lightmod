@@ -4,7 +4,7 @@
             [lightmod.app :as a]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
-            [nightcode.state :as s :refer [pref-state runtime-state]])
+            [nightcode.state :refer [pref-state runtime-state init-pref-state!]])
   (:import [javafx.application Application]
            [javafx.fxml FXMLLoader]
            [javafx.stage Stage]
@@ -25,9 +25,12 @@
 (defn -start [^lightmod.core app ^Stage stage]
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
         scene (Scene. root 1242 768)]
-    (swap! runtime-state assoc :stage stage)
-    (intern 'nightcode.state 'prefs (.node (Preferences/userRoot) "lightmod"))
-    (swap! pref-state assoc :theme (s/read-pref :theme :light))
+    (swap! runtime-state assoc :stage stage :prefs (.node (Preferences/userRoot) "lightmod"))
+    (init-pref-state! {:project-set #{}
+                       :selection nil
+                       :theme :light
+                       :text-size 16
+                       :auto-save? true})
     (doto stage
       (.setTitle "Lightmod 1.0.0")
       (.setScene scene)

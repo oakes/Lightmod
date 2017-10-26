@@ -237,7 +237,7 @@
 ; open in browser
 
 (defn open-in-web-browser! [^Scene scene]
-  (when-let [server (get-in @runtime-state [:servers (:current-project @runtime-state)])]
+  (when-let [server (get-in @runtime-state [:projects (:current-project @runtime-state) :server])]
     (let [port (-> server .getConnectors (aget 0) .getLocalPort)]
       (javax.swing.SwingUtilities/invokeLater
         (fn []
@@ -250,7 +250,7 @@
 ; restart
 
 (defn restart! [^Scene scene]
-  (let [server (get-in @runtime-state [:servers (:current-project @runtime-state)])
+  (let [server (get-in @runtime-state [:projects (:current-project @runtime-state) :server])
         port (-> server .getConnectors (aget 0) .getLocalPort)]
       (a/start-server! scene (:current-project @runtime-state) port)))
 

@@ -4,7 +4,9 @@
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
-            [cljs.build.api :refer [build]])
+            [cljs.build.api :refer [build]]
+            [hawk.core :as hawk]
+            [lightmod.reload :as lr])
   (:import [javafx.application Platform]
            [javafx.fxml FXMLLoader]))
 
@@ -50,25 +52,42 @@
 (defn path->ns [path leaf-name]
   (-> path io/file .getName (sanitize-name true) (str "." leaf-name)))
 
-(defn start-server! [scene project-dir port]
-  (when-let [server (get-in @runtime-state [:servers project-dir])]
-    (.stop server))
-  (load-file (.getCanonicalPath (io/file project-dir "server.clj")))
-  (let [-main (resolve (symbol (path->ns project-dir "server") "-main"))
+(declare compile-cljs!)
+
+(defn start-server! [scene dir port]
+  (when-let [{:keys [server reload-stop-fn file-watcher]}
+             (get-in @runtime-state [:projects dir])]
+    (.stop server)
+    (reload-stop-fn)
+    (hawk/stop! file-watcher))
+  (load-file (.getCanonicalPath (io/file dir "server.clj")))
+  (let [-main (resolve (symbol (path->ns dir "server") "-main"))
         server (-main "--port" (str port))
-        port (-> server .getConnectors (aget 0) .getLocalPort)]
-    (swap! runtime-state assoc-in [:servers project-dir] server)
+        port (-> server .getConnectors (aget 0) .getLocalPort)
+        reload-stop-fn (lr/start-reload-server! dir)
+        reload-port (-> reload-stop-fn meta :local-port)
+        out-dir (.getCanonicalPath (io/file dir ".out"))]
+    (spit (io/file dir ".out/reload-port.txt") (str reload-port))
+    (swap! runtime-state assoc-in [:projects dir]
+      {:server server
+       :reload-stop-fn reload-stop-fn
+       :clients #{}
+       :file-watcher (hawk/watch! [{:paths [dir]
+                                    :handler (fn [ctx {:keys [file]}]
+                                               (lr/file-changed! dir file out-dir #(compile-cljs! scene dir))
+                                               ctx)}])})
     (-> (.lookup scene "#app")
         .getEngine
         (.load (str "http://localhost:" port "/")))))
 
-(defn init-app! [scene dir]
+(defn compile-cljs! [scene dir]
   (System/setProperty "user.dir" dir)
   (build dir
     {:output-to (.getCanonicalPath (io/file dir "main.js"))
      :output-dir (.getCanonicalPath (io/file dir ".out"))
      :main (path->ns dir "client")
      :asset-path ".out"
+     :preloads '[lightmod.init]
      :foreign-libs (mapv #(update % :file copy-from-resources! dir)
                      [{:file "js/p5.js"
                        :provides ["p5.core"]}
@@ -92,6 +111,9 @@
      :externs (mapv #(copy-from-resources! % dir)
                 ["cljsjs/react/common/react.ext.js"
                  "cljsjs/create-react-class/common/create-react-class.ext.js"
-                 "cljsjs/react-dom/common/react-dom.ext.js"])})
+                 "cljsjs/react-dom/common/react-dom.ext.js"])}))
+
+(defn init-app! [scene dir]
+  (compile-cljs! scene dir)
   (start-server! scene dir 0))
 

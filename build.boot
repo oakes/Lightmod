@@ -3,7 +3,10 @@
   :resource-paths #{"resources"}
   :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
+                  [adzerk/boot-reload "0.5.2"]
                   [org.clojure/clojurescript "1.9.946"]
+                  [http-kit "2.2.0"]
+                  [hawk "0.2.11"]
                   [play-cljs "0.10.1"]
                   [reagent "0.7.0"]
                   [ring "1.6.2"]

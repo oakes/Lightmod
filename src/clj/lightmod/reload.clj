@@ -37,10 +37,10 @@
          (pr-str {:type :reload
                   :files (map #(web-path opts %) changed)}))))))
 
-(defn send-visual! [dir messages]
+(defn send-message! [dir messages]
   (when-let [clients (get-in @runtime-state [:projects dir :clients])]
     (doseq [channel clients]
-      (http/send! channel (pr-str (merge {:type :visual} messages))))))
+      (http/send! channel (pr-str messages)))))
 
 (defn start-reload-server! [dir]
   (http/run-server (partial reload-handler dir) {:port 0}))
@@ -50,7 +50,7 @@
            (not (u/parent-path? out-dir (.getCanonicalPath file))))
     (do
       (compile-fn)
-      (send-visual! dir {}))
+      (send-message! dir {:type :visual}))
     (->> file
          .getCanonicalPath
          (u/get-relative-path dir)

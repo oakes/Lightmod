@@ -75,7 +75,8 @@
        :file-watcher (hawk/watch! [{:paths [dir]
                                     :handler (fn [ctx {:keys [file]}]
                                                (when (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"])
-                                                 (load-file (.getCanonicalPath file)))
+                                                 (load-file (.getCanonicalPath file))
+                                                 (lr/send-message! dir {:type :visual-clj}))
                                                (lr/file-changed! dir file out-dir #(compile-cljs! scene dir))
                                                ctx)}])})
     (-> (.lookup scene "#app")

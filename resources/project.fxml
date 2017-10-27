@@ -22,8 +22,8 @@
                         <HBox fx:id="project_buttons" VBox.vgrow="NEVER">
                            <children>
                               <Separator prefWidth="200.0" HBox.hgrow="ALWAYS" />
-                              <Button mnemonicParsing="false" onAction="#onOpenInWebBrowser" text="Open in Web Browser" HBox.hgrow="NEVER" />
-                              <Button mnemonicParsing="false" onAction="#onRestart" text="Restart" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#onOpenInWebBrowser" text="Open in Web Browser" HBox.hgrow="NEVER" />
+                              <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#onRestart" text="Restart" />
                            </children>
                         </HBox>
                         <WebView fx:id="app" minHeight="-1.0" minWidth="-1.0" prefHeight="-1.0" prefWidth="-1.0" VBox.vgrow="ALWAYS" />

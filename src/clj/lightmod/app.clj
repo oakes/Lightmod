@@ -137,7 +137,7 @@
                  "cljsjs/create-react-class/common/create-react-class.ext.js"
                  "cljsjs/react-dom/common/react-dom.ext.js"])}))
 
-(defn start-server! [dir port]
+(defn start-server! [project-pane dir port]
   (when-let [{:keys [server reload-stop-fn reload-file-watcher]}
              (get-in @runtime-state [:projects dir])]
     (.stop server)
@@ -155,7 +155,8 @@
         out-dir (.getCanonicalPath (io/file dir ".out"))]
     (spit (io/file dir ".out/reload-port.txt") (str reload-port))
     (swap! runtime-state assoc-in [:projects dir]
-      {:url url
+      {:pane project-pane
+       :url url
        :server server
        :reload-stop-fn reload-stop-fn
        :clients #{}
@@ -182,7 +183,7 @@
 (defn init-app! [project-pane dir]
   (-> (fn []
         (compile-cljs! dir)
-        (let [url (start-server! dir 0)]
+        (let [url (start-server! project-pane dir 0)]
           (Platform/runLater
             (fn []
               (doto (.lookup project-pane "#app")

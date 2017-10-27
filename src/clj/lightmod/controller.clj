@@ -237,12 +237,13 @@
 ; open in browser
 
 (defn open-in-web-browser! [^Scene scene]
-  (when-let [server (get-in @runtime-state [:projects (:current-project @runtime-state) :server])]
-    (let [port (-> server .getConnectors (aget 0) .getLocalPort)]
-      (javax.swing.SwingUtilities/invokeLater
-        (fn []
-          (when (Desktop/isDesktopSupported)
-            (.browse (Desktop/getDesktop) (java.net.URI. (str "http://localhost:" port "/index.html")))))))))
+  (when-let [project (a/get-project-dir)]
+    (when-let [server (get-in @runtime-state [:projects (.getCanonicalPath project) :server])]
+      (let [port (-> server .getConnectors (aget 0) .getLocalPort)]
+        (javax.swing.SwingUtilities/invokeLater
+          (fn []
+            (when (Desktop/isDesktopSupported)
+              (.browse (Desktop/getDesktop) (java.net.URI. (str "http://localhost:" port "/index.html"))))))))))
 
 (defn -onOpenInWebBrowser [this ^ActionEvent event]
   (-> event .getSource .getScene open-in-web-browser!))
@@ -250,9 +251,10 @@
 ; restart
 
 (defn restart! [^Scene scene]
-  (let [server (get-in @runtime-state [:projects (:current-project @runtime-state) :server])
-        port (-> server .getConnectors (aget 0) .getLocalPort)]
-      (a/start-server! scene (:current-project @runtime-state) port)))
+  (when-let [project (a/get-project-dir)]
+    (let [server (get-in @runtime-state [:projects (.getCanonicalPath project) :server])
+          port (-> server .getConnectors (aget 0) .getLocalPort)]
+      (a/start-server! scene (.getCanonicalPath project) port))))
 
 (defn -onRestart [this ^ActionEvent event]
   (-> event .getSource .getScene restart!))

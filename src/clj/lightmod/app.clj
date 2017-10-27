@@ -37,27 +37,46 @@
                                     (swap! pref-state assoc :selection (.getCanonicalPath file)))))))))
     pane))
 
+(defn get-project-dir
+  ([] (get-project-dir (io/file (:selection @pref-state))))
+  ([file]
+   (loop [f file]
+     (when-let [parent (.getParentFile f)]
+       (if (= parent (:projects-dir @runtime-state))
+         f
+         (recur parent))))))
+
 (defn set-selection-listener! [scene]
   (add-watch pref-state :selection-changed
     (fn [_ _ _ {:keys [selection]}]
       (when selection
         (let [file (io/file selection)]
-          (when-let [pane (or (when (.isDirectory file)
-                                (dir-pane file))
-                              (get-in @runtime-state [:editor-panes selection])
-                              (when-let [new-editor (e/editor-pane pref-state runtime-state file)]
-                                (swap! runtime-state update :editor-panes assoc selection new-editor)
-                                new-editor))]
-            (let [editors (.lookup scene "#editors")]
-              (shortcuts/hide-tooltips! editors)
-              (doto (.getChildren editors)
-                (.clear)
-                (.add pane)))
-            (.setDisable (.lookup scene "#up") (= selection (:current-project @runtime-state)))
-            (.setDisable (.lookup scene "#close") (.isDirectory file))
-            (Platform/runLater
-              (fn []
-                (some-> (.lookup pane "#webview") .requestFocus)))))))))
+          (when-let [project-dir (get-project-dir file)]
+            (when-let [tab (->> (.lookup scene "#projects")
+                                .getTabs
+                                (filter #(= (.getText %) (.getName project-dir)))
+                                first)]
+              (when-let [pane (or (when (.isDirectory file)
+                                    (dir-pane file))
+                                  (get-in @runtime-state [:editor-panes selection])
+                                  (when-let [new-editor (e/editor-pane pref-state runtime-state file)]
+                                    (swap! runtime-state update :editor-panes assoc selection new-editor)
+                                    new-editor))]
+                (let [content (.getContent tab)
+                      editors (-> content
+                                  (.lookup "#project")
+                                  .getItems
+                                  (.get 1)
+                                  (.lookup "#editors"))]
+                  (shortcuts/hide-tooltips! content)
+                  (doto (.getChildren editors)
+                    (.clear)
+                    (.add pane))
+                  (.setDisable (.lookup editors "#up") (= selection (.getCanonicalPath project-dir)))
+                  (.setDisable (.lookup editors "#close") (.isDirectory file))
+                  (Platform/runLater
+                    (fn []
+                      (some-> (.lookup pane "#webview") .requestFocus))))))))))))
 
 (defn copy-from-resources! [from to]
   (let [dest (io/file to ".out" from)]

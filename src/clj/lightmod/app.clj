@@ -15,13 +15,13 @@
            [javafx.fxml FXMLLoader]))
 
 (defn dir-pane [f]
-  (let [pane (FXMLLoader/load (io/resource "dir.fxml"))
-        file-grid (.lookup pane "#filegrid")]
+  (let [pane (FXMLLoader/load (io/resource "dir.fxml"))]
     (shortcuts/add-tooltips! pane [:#up :#new_file :#open_in_file_browser :#close])
     (doseq [file (.listFiles f)
             :when (and  (-> file .getName (.startsWith ".") not)
                         (-> file .getName (not= "main.js")))]
-      (-> file-grid
+      (-> (.lookup pane "#filegrid")
+          .getContent
           .getChildren
           (.add (doto (if-let [icon (u/get-icon-path file)]
                         (Button. "" (doto (Label. (.getName file)

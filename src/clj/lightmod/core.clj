@@ -35,13 +35,13 @@
       (.setTitle "Lightmod 1.0.0")
       (.setScene scene)
       (.show))
+    (a/set-selection-listener! scene)
     (let [dir (io/file (System/getProperty "user.home") "Lightmod" "hello_world")
           file (io/file dir "client.cljs")
           path (.getCanonicalPath file)]
       (swap! runtime-state assoc :current-project (.getCanonicalPath dir))
-      (swap! pref-state assoc :selection (.getCanonicalPath file))
-      (a/init-app! scene (.getCanonicalPath dir))
-      (a/update-editor! scene))
+      (swap! pref-state assoc :selection (.getCanonicalPath dir))
+      (a/init-app! scene (.getCanonicalPath dir)))
     (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
     (-> scene (.lookup "#app") (.setContextMenuEnabled false))
     ; apply the prefs

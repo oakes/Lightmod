@@ -71,8 +71,7 @@
 (defn up! [^Scene scene]
   (when-let [path (:selection @pref-state)]
     (->> path io/file .getParentFile .getCanonicalPath
-         (swap! pref-state assoc :selection))
-    (a/update-editor! scene)))
+         (swap! pref-state assoc :selection))))
 
 (defn -onUp [this ^ActionEvent event]
   (-> event .getSource .getScene up!))

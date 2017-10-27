@@ -9,28 +9,55 @@
             [hawk.core :as hawk]
             [lightmod.reload :as lr])
   (:import [javafx.application Platform]
+           [javafx.scene.control Button ContentDisplay Label]
+           [javafx.scene.image ImageView]
+           [javafx.event EventHandler]
            [javafx.fxml FXMLLoader]))
 
-(defn update-editor! [scene]
-  (when-let [path (:selection @pref-state)]
-    (let [file (io/file path)]
-      (when-let [pane (or (when (.isDirectory file)
-                            (doto (FXMLLoader/load (io/resource "dir.fxml"))
-                              (shortcuts/add-tooltips! [:#up :#new_file :#open_in_file_browser :#close])))
-                          (get-in @runtime-state [:editor-panes path])
-                          (when-let [new-editor (e/editor-pane pref-state runtime-state file)]
-                            (swap! runtime-state update :editor-panes assoc path new-editor)
-                            new-editor))]
-        (let [editors (.lookup scene "#editors")]
-          (shortcuts/hide-tooltips! editors)
-          (doto (.getChildren editors)
-            (.clear)
-            (.add pane)))
-        (.setDisable (.lookup scene "#up") (= path (:current-project @runtime-state)))
-        (.setDisable (.lookup scene "#close") (.isDirectory file))
-        (Platform/runLater
-          (fn []
-            (some-> (.lookup pane "#webview") .requestFocus)))))))
+(defn dir-pane [f]
+  (let [pane (FXMLLoader/load (io/resource "dir.fxml"))
+        file-grid (.lookup pane "#filegrid")]
+    (shortcuts/add-tooltips! pane [:#up :#new_file :#open_in_file_browser :#close])
+    (doseq [file (.listFiles f)
+            :when (or (-> file .getName (.startsWith ".") not)
+                      (-> file .getName (= "main.js")))]
+      (-> file-grid
+          .getChildren
+          (.add (doto (if-let [icon (u/get-icon-path file)]
+                        (Button. "" (doto (Label. (.getName file)
+                                            (doto (ImageView. icon)
+                                              (.setFitWidth 100)
+                                              (.setPreserveRatio true)))
+                                      (.setContentDisplay ContentDisplay/TOP)))
+                        (Button. (.getName file)))
+                  (.setPrefWidth 150)
+                  (.setPrefHeight 150)
+                  (.setOnAction (reify EventHandler
+                                  (handle [this event]
+                                    (swap! pref-state assoc :selection (.getCanonicalPath file)))))))))
+    pane))
+
+(defn set-selection-listener! [scene]
+  (add-watch pref-state :selection-changed
+    (fn [_ _ _ {:keys [selection]}]
+      (when selection
+        (let [file (io/file selection)]
+          (when-let [pane (or (when (.isDirectory file)
+                                (dir-pane file))
+                              (get-in @runtime-state [:editor-panes selection])
+                              (when-let [new-editor (e/editor-pane pref-state runtime-state file)]
+                                (swap! runtime-state update :editor-panes assoc selection new-editor)
+                                new-editor))]
+            (let [editors (.lookup scene "#editors")]
+              (shortcuts/hide-tooltips! editors)
+              (doto (.getChildren editors)
+                (.clear)
+                (.add pane)))
+            (.setDisable (.lookup scene "#up") (= selection (:current-project @runtime-state)))
+            (.setDisable (.lookup scene "#close") (.isDirectory file))
+            (Platform/runLater
+              (fn []
+                (some-> (.lookup pane "#webview") .requestFocus)))))))))
 
 (defn copy-from-resources! [from to]
   (let [dest (io/file to ".out" from)]

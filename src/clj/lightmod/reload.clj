@@ -48,7 +48,7 @@
 (defn reload-file! [dir file]
   (->> file
        .getCanonicalPath
-       (u/get-relative-path dir)
+       (u/get-relative-path (-> @runtime-state :projects-dir .getCanonicalPath))
        io/file
        hash-set
        (send-changed! dir)))

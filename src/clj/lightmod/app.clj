@@ -80,9 +80,10 @@
 
 (defn copy-from-resources! [from to]
   (let [dest (io/file to ".out" from)]
-    (.mkdirs (.getParentFile dest))
-    (spit dest (slurp (io/resource from)))
-    (str ".out/" from)))
+    (when-not (.exists dest)
+      (.mkdirs (.getParentFile dest))
+      (spit dest (slurp (io/resource from))))
+    (str (-> to io/file .getName) "/.out/" from)))
 
 (defn sanitize-name [s]
   (-> s
@@ -93,48 +94,7 @@
 (defn path->ns [path leaf-name]
   (-> path io/file .getName sanitize-name (str "." leaf-name)))
 
-(declare compile-cljs!)
-
-(defn start-server! [scene dir port]
-  (when-let [{:keys [server reload-stop-fn reload-file-watcher]}
-             (get-in @runtime-state [:projects dir])]
-    (.stop server)
-    (reload-stop-fn)
-    (hawk/stop! reload-file-watcher))
-  (load-file (.getCanonicalPath (io/file dir "server.clj")))
-  (let [-main (resolve (symbol (path->ns dir "server") "-main"))
-        server (-main "--port" (str port))
-        port (-> server .getConnectors (aget 0) .getLocalPort)
-        reload-stop-fn (lr/start-reload-server! dir)
-        reload-port (-> reload-stop-fn meta :local-port)
-        out-dir (.getCanonicalPath (io/file dir ".out"))]
-    (spit (io/file dir ".out/reload-port.txt") (str reload-port))
-    (swap! runtime-state assoc-in [:projects dir]
-      {:server server
-       :reload-stop-fn reload-stop-fn
-       :clients #{}
-       :editor-file-watcher (or (get-in @runtime-state [:projects dir :editor-file-watcher])
-                                (e/create-file-watcher dir runtime-state))
-       :reload-file-watcher
-       (hawk/watch! [{:paths [dir]
-                      :handler (fn [ctx {:keys [kind file]}]
-                                 (when (and (= kind :modify)
-                                            (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"]))
-                                   (load-file (.getCanonicalPath file))
-                                   (lr/send-message! dir {:type :visual-clj}))
-                                 (if (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
-                                          (not (u/parent-path? out-dir (.getCanonicalPath file))))
-                                   (do
-                                     (compile-cljs! scene dir)
-                                     (lr/send-message! dir {:type :visual}))
-                                   (lr/reload-file! dir file))
-                                 ctx)}])})
-    (-> (.lookup scene "#app")
-        .getEngine
-        (.load (str "http://localhost:" port "/index.html")))))
-
-(defn compile-cljs! [scene dir]
-  (System/setProperty "user.dir" dir)
+(defn compile-cljs! [dir]
   (build dir
     {:output-to (.getCanonicalPath (io/file dir "main.js"))
      :output-dir (.getCanonicalPath (io/file dir ".out"))
@@ -166,7 +126,57 @@
                  "cljsjs/create-react-class/common/create-react-class.ext.js"
                  "cljsjs/react-dom/common/react-dom.ext.js"])}))
 
-(defn init-app! [scene dir]
-  (compile-cljs! scene dir)
-  (start-server! scene dir 0))
+(defn start-server! [dir port]
+  (when-let [{:keys [server reload-stop-fn reload-file-watcher]}
+             (get-in @runtime-state [:projects dir])]
+    (.stop server)
+    (reload-stop-fn)
+    (hawk/stop! reload-file-watcher))
+  (load-file (.getCanonicalPath (io/file dir "server.clj")))
+  (let [-main (resolve (symbol (path->ns dir "server") "-main"))
+        server (-main "--port" (str port))
+        port (-> server .getConnectors (aget 0) .getLocalPort)
+        url (str "http://localhost:" port "/"
+                 (-> dir io/file .getName)
+                 "/index.html")
+        reload-stop-fn (lr/start-reload-server! dir)
+        reload-port (-> reload-stop-fn meta :local-port)
+        out-dir (.getCanonicalPath (io/file dir ".out"))]
+    (spit (io/file dir ".out/reload-port.txt") (str reload-port))
+    (swap! runtime-state assoc-in [:projects dir]
+      {:url url
+       :server server
+       :reload-stop-fn reload-stop-fn
+       :clients #{}
+       :editor-file-watcher (or (get-in @runtime-state [:projects dir :editor-file-watcher])
+                                (e/create-file-watcher dir runtime-state))
+       :reload-file-watcher
+       (hawk/watch! [{:paths [dir]
+                      :handler (fn [ctx {:keys [kind file]}]
+                                 (when (and (= kind :modify)
+                                            (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"]))
+                                   (load-file (.getCanonicalPath file))
+                                   (lr/send-message! dir {:type :visual-clj}))
+                                 (cond
+                                   (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
+                                        (not (u/parent-path? out-dir (.getCanonicalPath file))))
+                                   (do
+                                     (compile-cljs! dir)
+                                     (lr/send-message! dir {:type :visual}))
+                                   (u/parent-path? out-dir (.getCanonicalPath file))
+                                   (lr/reload-file! dir file))
+                                 ctx)}])})
+    url))
+
+(defn init-app! [project-pane dir]
+  (-> (fn []
+        (compile-cljs! dir)
+        (let [url (start-server! dir 0)]
+          (Platform/runLater
+            (fn []
+              (doto (.lookup project-pane "#app")
+                (.setContextMenuEnabled false)
+                (-> .getEngine (.load url)))))))
+      (Thread.)
+      .start))
 

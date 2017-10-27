@@ -29,8 +29,10 @@
         scene (Scene. root 1242 768)
         projects (.lookup scene "#projects")
         projects-dir (io/file (System/getProperty "user.home") "LightmodProjects")]
+    (System/setProperty "user.dir" (.getCanonicalPath projects-dir))
     ; create project tabs
     (doseq [file (.listFiles projects-dir)
+            :let [dir (.getCanonicalPath file)]
             :when (and (.isDirectory file)
                        (-> file .getName (.startsWith ".") not))]
       (let [project-pane (FXMLLoader/load (io/resource "project.fxml"))]
@@ -48,12 +50,13 @@
                       (reify EventHandler
                         (handle [this event]
                           (when (-> event .getTarget .isClosable)
-                            (-> project-pane (.lookup "#app") (.setContextMenuEnabled false))
                             (if (-> event .getTarget .isSelected)
                               (do
                                 (swap! pref-state assoc :selection
                                   (.getCanonicalPath file))
-                                #_(a/init-app! scene (.getCanonicalPath file)))
+                                #_
+                                (when-not (get-in @runtime-state [:projects dir])
+                                  (a/init-app! project-pane dir)))
                               (let [content (-> event .getTarget .getContent)
                                     editors (-> content
                                                 (.lookup "#project")

@@ -26,8 +26,7 @@
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
         scene (Scene. root 1242 768)]
     (swap! runtime-state assoc :stage stage :prefs (.node (Preferences/userRoot) "lightmod"))
-    (init-pref-state! {:project-set #{}
-                       :selection nil
+    (init-pref-state! {:selection nil
                        :theme :light
                        :text-size 16
                        :auto-save? true})

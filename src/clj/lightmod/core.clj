@@ -54,7 +54,6 @@
                               (do
                                 (swap! pref-state assoc :selection
                                   (.getCanonicalPath file))
-                                #_
                                 (when-not (get-in @runtime-state [:projects dir])
                                   (a/init-app! project-pane dir)))
                               (let [content (-> event .getTarget .getContent)

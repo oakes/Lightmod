@@ -94,7 +94,17 @@
 (defn path->ns [path leaf-name]
   (-> path io/file .getName sanitize-name (str "." leaf-name)))
 
+(defn delete-children-recursively! [path]
+  (let [f (io/file path)]
+    (when (.isDirectory f)
+      (doseq [f2 (.listFiles f)]
+        (delete-children-recursively! f2)))
+    (io/delete-file f))
+  nil)
+
 (defn compile-cljs! [dir]
+  (delete-children-recursively!
+    (-> dir (io/file ".out" (-> dir io/file .getName)) .getCanonicalPath))
   (build dir
     {:output-to (.getCanonicalPath (io/file dir "main.js"))
      :output-dir (.getCanonicalPath (io/file dir ".out"))

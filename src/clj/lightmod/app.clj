@@ -65,20 +65,14 @@
     (spit dest (slurp (io/resource from)))
     (str ".out/" from)))
 
-(defn sanitize-name [s ns?]
+(defn sanitize-name [s]
   (-> s
       str/lower-case
-      (str/replace
-        (if ns?
-          #"[ _]"
-          #"[ \-]")
-        (if ns?
-          "-"
-          "_"))
+      (str/replace #"[ _]" "-")
       (str/replace #"[^a-z0-9\-]" "")))
 
 (defn path->ns [path leaf-name]
-  (-> path io/file .getName (sanitize-name true) (str "." leaf-name)))
+  (-> path io/file .getName sanitize-name (str "." leaf-name)))
 
 (declare compile-cljs!)
 

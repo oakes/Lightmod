@@ -216,7 +216,8 @@
             new-path (.getCanonicalPath new-file)
             project-tree (.lookup scene "#project_tree")]
         (.mkdirs (.getParentFile new-file))
-        (.createNewFile new-file)))))
+        (.createNewFile new-file)
+        (swap! pref-state assoc :selection new-path)))))
 
 (defn -onNewFile [this ^ActionEvent event]
   (-> event .getSource .getScene new-file!))

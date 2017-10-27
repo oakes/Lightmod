@@ -35,7 +35,7 @@
       (.setScene scene)
       (.show))
     (a/set-selection-listener! scene)
-    (let [dir (io/file (System/getProperty "user.home") "Lightmod" "hello_world")
+    (let [dir (io/file (System/getProperty "user.home") "LightmodProjects" "hello-world")
           file (io/file dir "client.cljs")
           path (.getCanonicalPath file)]
       (swap! runtime-state assoc :current-project (.getCanonicalPath dir))

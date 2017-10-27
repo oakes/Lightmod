@@ -19,14 +19,14 @@
         file-grid (.lookup pane "#filegrid")]
     (shortcuts/add-tooltips! pane [:#up :#new_file :#open_in_file_browser :#close])
     (doseq [file (.listFiles f)
-            :when (or (-> file .getName (.startsWith ".") not)
-                      (-> file .getName (= "main.js")))]
+            :when (and  (-> file .getName (.startsWith ".") not)
+                        (-> file .getName (not= "main.js")))]
       (-> file-grid
           .getChildren
           (.add (doto (if-let [icon (u/get-icon-path file)]
                         (Button. "" (doto (Label. (.getName file)
                                             (doto (ImageView. icon)
-                                              (.setFitWidth 100)
+                                              (.setFitWidth 90)
                                               (.setPreserveRatio true)))
                                       (.setContentDisplay ContentDisplay/TOP)))
                         (Button. (.getName file)))
@@ -104,8 +104,9 @@
                                 (e/create-file-watcher dir runtime-state))
        :reload-file-watcher
        (hawk/watch! [{:paths [dir]
-                      :handler (fn [ctx {:keys [file]}]
-                                 (when (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"])
+                      :handler (fn [ctx {:keys [kind file]}]
+                                 (when (and (= kind :modify)
+                                            (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"]))
                                    (load-file (.getCanonicalPath file))
                                    (lr/send-message! dir {:type :visual-clj}))
                                  (if (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])

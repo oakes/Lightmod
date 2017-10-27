@@ -19,8 +19,8 @@
                   [org.clojure/tools.cli "0.3.5"]
                   [org.clojure/clojure "1.9.0-beta2"]
                   [nightcode "2.5.0.1" :exclusions [leiningen
-                                                   play-cljs/lein-template
-                                                   org.eclipse.jgit/org.eclipse.jgit]]])
+                                                    play-cljs/lein-template
+                                                    org.eclipse.jgit/org.eclipse.jgit]]])
 
 (require
   '[adzerk.boot-cljs :refer [cljs]]

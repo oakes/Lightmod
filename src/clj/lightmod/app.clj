@@ -103,8 +103,9 @@
   nil)
 
 (defn compile-cljs! [dir]
-  (delete-children-recursively!
-    (-> dir (io/file ".out" (-> dir io/file .getName)) .getCanonicalPath))
+  (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))]
+    (when (.exists cljs-dir)
+      (delete-children-recursively! (.getCanonicalPath cljs-dir))))
   (build dir
     {:output-to (.getCanonicalPath (io/file dir "main.js"))
      :output-dir (.getCanonicalPath (io/file dir ".out"))

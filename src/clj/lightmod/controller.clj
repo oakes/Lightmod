@@ -251,9 +251,9 @@
 
 (defn restart! [^Scene scene]
   (when-let [project (a/get-project-dir)]
-    (let [server (get-in @runtime-state [:projects (.getCanonicalPath project) :server])
-          port (-> server .getConnectors (aget 0) .getLocalPort)]
-      (a/start-server! (.getCanonicalPath project) port))))
+    (when-let [server (get-in @runtime-state [:projects (.getCanonicalPath project) :server])]
+      (a/start-server! (.getCanonicalPath project)
+        (-> server .getConnectors (aget 0) .getLocalPort)))))
 
 (defn -onRestart [this ^ActionEvent event]
   (-> event .getSource .getScene restart!))

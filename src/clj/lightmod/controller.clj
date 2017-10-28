@@ -251,14 +251,9 @@
 
 (defn restart! [^Scene scene]
   (when-let [project (a/get-project-dir)]
-    (when-let [{:keys [server pane]} (get-in @runtime-state [:projects (.getCanonicalPath project)])]
-      (let [url (a/start-server!
-                  pane
-                  (.getCanonicalPath project)
-                  (-> server .getConnectors (aget 0) .getLocalPort))]
-        (-> (.lookup pane "#app")
-            .getEngine
-            (.load url))))))
+    (when-let [pane (get-in @runtime-state [:projects (.getCanonicalPath project) :pane])]
+      (let [url (a/start-server! pane (.getCanonicalPath project))]
+        (-> (.lookup pane "#app") .getEngine (.load url))))))
 
 (defn -onRestart [this ^ActionEvent event]
   (-> event .getSource .getScene restart!))

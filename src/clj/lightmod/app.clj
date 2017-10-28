@@ -144,11 +144,11 @@
     (reload-stop-fn)
     (hawk/stop! reload-file-watcher)))
 
-(defn start-server! [project-pane dir port]
+(defn start-server! [project-pane dir]
   (stop-server! dir)
   (load-file (.getCanonicalPath (io/file dir "server.clj")))
   (let [-main (resolve (symbol (path->ns dir "server") "-main"))
-        server (-main "--port" (str port))
+        server (-main)
         port (-> server .getConnectors (aget 0) .getLocalPort)
         url (str "http://localhost:" port "/"
                  (-> dir io/file .getName)
@@ -191,7 +191,7 @@
 (defn start-app! [project-pane dir]
   (-> (fn []
         (compile-cljs! dir)
-        (let [url (start-server! project-pane dir 0)]
+        (let [url (start-server! project-pane dir)]
           (Platform/runLater
             (fn []
               (doto (.lookup project-pane "#app")

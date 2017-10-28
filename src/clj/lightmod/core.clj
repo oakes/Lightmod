@@ -56,13 +56,12 @@
                                   (.getCanonicalPath file))
                                 (when-not (get-in @runtime-state [:projects dir])
                                   (a/init-app! project-pane dir)))
-                              (let [content (-> event .getTarget .getContent)
-                                    editors (-> content
+                              (let [editors (-> project-pane
                                                 (.lookup "#project")
                                                 .getItems
                                                 (.get 1)
                                                 (.lookup "#editors"))]
-                                (shortcuts/hide-tooltips! content)
+                                (shortcuts/hide-tooltips! project-pane)
                                 (.clear (.getChildren editors)))))))))))))
     ; initialize state
     (swap! runtime-state assoc

@@ -54,13 +54,13 @@
                               (do
                                 (swap! pref-state assoc :selection
                                   (.getCanonicalPath file))
-                                (when-not (get-in @runtime-state [:projects dir])
-                                  (a/init-app! project-pane dir)))
+                                (a/start-app! project-pane dir))
                               (let [editors (-> project-pane
                                                 (.lookup "#project")
                                                 .getItems
                                                 (.get 1)
                                                 (.lookup "#editors"))]
+                                (a/stop-app! project-pane dir)
                                 (shortcuts/hide-tooltips! project-pane)
                                 (.clear (.getChildren editors)))))))))))))
     ; initialize state

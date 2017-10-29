@@ -2,7 +2,10 @@
   (:require [adzerk.boot-reload.client :as client]
             [adzerk.boot-reload.reload :as rl]
             [adzerk.boot-reload.display :as d]
-            [goog.dom :as dom])
+            [goog.dom :as dom]
+            [eval-soup.core :as es]
+            [goog.object :as gobj]
+            [cljs.reader :refer [read-string]])
   (:import goog.net.XhrIo)
   (:require-macros [lightmod.init :as i]))
 
@@ -36,4 +39,24 @@
             {:on-jsload +})
           (js/console.log "WARNING: Couldn't find reload port")))
       "GET")))
+
+(defn form->serializable [form]
+  (if (instance? js/Error form)
+    (array (or (some-> form .-cause .-message) (.-message form))
+      (.-fileName form) (.-lineNumber form))
+    (pr-str form)))
+
+(def current-ns (atom 'cljs.user))
+
+(defn ^:export eval-code [path code]
+  (es/code->results
+    (read-string code)
+    (fn [results]
+      (.onevalcomplete js/window.java
+        path
+        (pr-str (mapv form->serializable results))
+        (str @current-ns)))
+    {:current-ns current-ns
+     :custom-load (fn [opts cb]
+                    (cb {:lang :clj :source ""}))}))
 

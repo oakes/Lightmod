@@ -1,6 +1,7 @@
 (ns lightmod.app
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            [clojure.edn :as edn]
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
@@ -47,6 +48,14 @@
          f
          (recur parent))))))
 
+(defn eval-cljs-code [path dir code]
+  (when-let [{:keys [pane eval-chan]} (get-in @runtime-state [:projects dir])]
+    (when-let [app (.lookup pane "#app")]
+      (-> (.getEngine app)
+          (.executeScript "lightmod.init")
+          (.call "eval_code" (into-array [path code])))
+      nil)))
+
 (defn set-selection-listener! [scene]
   (add-watch pref-state :selection-changed
     (fn [_ _ _ {:keys [selection]}]
@@ -61,8 +70,10 @@
                                     (dir-pane file))
                                   (get-in @runtime-state [:editor-panes selection])
                                   (when-let [new-editor (e/editor-pane pref-state runtime-state file
-                                                          (when (#{"clj" "cljc"} (-> file .getName u/get-extension))
-                                                            e/eval-code))]
+                                                          (case (-> file .getName u/get-extension)
+                                                            ("clj" "cljc") e/eval-code
+                                                            "cljs" (partial eval-cljs-code selection (.getCanonicalPath project-dir))
+                                                            nil))]
                                     (swap! runtime-state update :editor-panes assoc selection new-editor)
                                     new-editor))]
                 (let [content (.getContent tab)
@@ -167,6 +178,9 @@
     (reload-stop-fn)
     (hawk/stop! reload-file-watcher)))
 
+(definterface Bridge
+  (onevalcomplete [path results ns-name]))
+
 (defn start-server! [project-pane dir]
   (stop-server! dir)
   (compile-clj! dir (.getCanonicalPath (io/file dir "server.clj")))
@@ -178,12 +192,28 @@
                  "/index.html")
         reload-stop-fn (lr/start-reload-server! dir)
         reload-port (-> reload-stop-fn meta :local-port)
-        out-dir (.getCanonicalPath (io/file dir ".out"))]
+        out-dir (.getCanonicalPath (io/file dir ".out"))
+        bridge (reify Bridge
+                 (onevalcomplete [this path results ns-name]
+                   (when-let [editor (get-in @runtime-state [:editor-panes path])]
+                     (-> editor
+                         (.lookup "#webview")
+                         .getEngine
+                         (.executeScript "window")
+                         (.call "setInstaRepl" (into-array [results]))))))]
     (spit (io/file dir ".out/reload-port.txt") (str reload-port))
+    (Platform/runLater
+      (fn []
+        (-> project-pane
+            (.lookup "#app")
+            .getEngine
+            (.executeScript "window")
+            (.setMember "java" bridge))))
     (swap! runtime-state assoc-in [:projects dir]
       {:pane project-pane
        :url url
        :server server
+       :bridge bridge
        :reload-stop-fn reload-stop-fn
        :clients #{}
        :editor-file-watcher (or (get-in @runtime-state [:projects dir :editor-file-watcher])

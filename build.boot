@@ -1,5 +1,5 @@
 (set-env!
-  :source-paths #{"src/clj"}
+  :source-paths #{"src/clj" "src/cljs"}
   :resource-paths #{"resources"}
   :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
@@ -21,8 +21,8 @@
                   [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
                   [nightcode "2.5.1"
                    :exclusions [leiningen
-                                            play-cljs/lein-template
-                                            org.eclipse.jgit/org.eclipse.jgit]]])
+                                play-cljs/lein-template
+                                org.eclipse.jgit/org.eclipse.jgit]]])
 
 (require
   '[adzerk.boot-cljs :refer [cljs]]

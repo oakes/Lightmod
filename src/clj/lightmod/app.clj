@@ -7,7 +7,8 @@
             [nightcode.utils :as u]
             [cljs.build.api :refer [build]]
             [hawk.core :as hawk]
-            [lightmod.reload :as lr])
+            [lightmod.reload :as lr]
+            [cljs.analyzer :as ana])
   (:import [javafx.application Platform]
            [javafx.scene.control Button ContentDisplay Label]
            [javafx.scene.image ImageView]
@@ -103,39 +104,60 @@
   nil)
 
 (defn compile-cljs! [dir]
-  (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))]
+  (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))
+        warnings (atom [])
+        on-warning (fn [warning-type env extra]
+                     (swap! warnings conj
+                       (merge {:message (ana/error-message warning-type extra)
+                               :ns (-> env :ns :name)
+                               :type warning-type
+                               :file (-> @runtime-state
+                                         :projects-dir
+                                         .getCanonicalPath
+                                         (u/get-relative-path ana/*cljs-file*))}
+                         (select-keys env [:line :column]))))]
     (when (.exists cljs-dir)
-      (delete-children-recursively! (.getCanonicalPath cljs-dir))))
-  (build dir
-    {:output-to (.getCanonicalPath (io/file dir "main.js"))
-     :output-dir (.getCanonicalPath (io/file dir ".out"))
-     :main (path->ns dir "client")
-     :asset-path ".out"
-     :preloads '[lightmod.init]
-     :foreign-libs (mapv #(update % :file copy-from-resources! dir)
-                     [{:file "js/p5.js"
-                       :provides ["p5.core"]}
-                      {:file "js/p5.tiledmap.js"
-                       :provides ["p5.tiled-map"]
-                       :requires ["p5.core"]}
-                      {:file "cljsjs/react/development/react.inc.js"
-                       :provides ["react" "cljsjs.react"]
-                       :file-min ".out/cljsjs/react/production/react.min.inc.js"
-                       :global-exports '{react React}}
-                      {:file "cljsjs/create-react-class/development/create-react-class.inc.js"
-                       :provides ["cljsjs.create-react-class" "create-react-class"]
-                       :requires ["react"]
-                       :file-min "cljsjs/create-react-class/production/create-react-class.min.inc.js"
-                       :global-exports '{create-react-class createReactClass}}
-                      {:file "cljsjs/react-dom/development/react-dom.inc.js"
-                       :provides ["react-dom" "cljsjs.react.dom"]
-                       :requires ["react"]
-                       :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
-                       :global-exports '{react-dom ReactDOM}}])
-     :externs (mapv #(copy-from-resources! % dir)
-                ["cljsjs/react/common/react.ext.js"
-                 "cljsjs/create-react-class/common/create-react-class.ext.js"
-                 "cljsjs/react-dom/common/react-dom.ext.js"])}))
+      (delete-children-recursively! (.getCanonicalPath cljs-dir)))
+    (try
+      (build dir
+        {:output-to (.getCanonicalPath (io/file dir "main.js"))
+         :output-dir (.getCanonicalPath (io/file dir ".out"))
+         :main (path->ns dir "client")
+         :asset-path ".out"
+         :preloads '[lightmod.init]
+         :foreign-libs (mapv #(update % :file copy-from-resources! dir)
+                         [{:file "js/p5.js"
+                           :provides ["p5.core"]}
+                          {:file "js/p5.tiledmap.js"
+                           :provides ["p5.tiled-map"]
+                           :requires ["p5.core"]}
+                          {:file "cljsjs/react/development/react.inc.js"
+                           :provides ["react" "cljsjs.react"]
+                           :file-min ".out/cljsjs/react/production/react.min.inc.js"
+                           :global-exports '{react React}}
+                          {:file "cljsjs/create-react-class/development/create-react-class.inc.js"
+                           :provides ["cljsjs.create-react-class" "create-react-class"]
+                           :requires ["react"]
+                           :file-min "cljsjs/create-react-class/production/create-react-class.min.inc.js"
+                           :global-exports '{create-react-class createReactClass}}
+                          {:file "cljsjs/react-dom/development/react-dom.inc.js"
+                           :provides ["react-dom" "cljsjs.react.dom"]
+                           :requires ["react"]
+                           :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
+                           :global-exports '{react-dom ReactDOM}}])
+         :externs (mapv #(copy-from-resources! % dir)
+                    ["cljsjs/react/common/react.ext.js"
+                     "cljsjs/create-react-class/common/create-react-class.ext.js"
+                     "cljsjs/react-dom/common/react-dom.ext.js"])
+         :warning-handlers [on-warning]})
+      (lr/send-message! dir {:type :visual
+                             :warnings @warnings})
+      (catch Exception e
+        (lr/send-message! dir {:type :visual
+                               :warnings @warnings
+                               :exception (merge
+                                            {:message (.getMessage e)}
+                                            (select-keys (ex-data e) [:line :column]))})))))
 
 (defn stop-server! [dir]
   (when-let [{:keys [server reload-stop-fn reload-file-watcher]}
@@ -175,9 +197,7 @@
                                  (cond
                                    (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
                                         (not (u/parent-path? out-dir (.getCanonicalPath file))))
-                                   (do
-                                     (compile-cljs! dir)
-                                     (lr/send-message! dir {:type :visual}))
+                                   (compile-cljs! dir)
                                    (u/parent-path? out-dir (.getCanonicalPath file))
                                    (lr/reload-file! dir file))
                                  ctx)}])})

@@ -18,7 +18,6 @@
                   [com.rpl/specter "1.0.4"]
                   [org.clojure/tools.cli "0.3.5"]
                   [org.clojure/clojure "1.9.0-beta2"]
-                  [eval-soup "1.2.3"]
                   [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
                   [nightcode "2.5.1"
                    :exclusions [leiningen

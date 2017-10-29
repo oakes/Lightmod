@@ -20,9 +20,10 @@
                   [org.clojure/clojure "1.9.0-beta2"]
                   [eval-soup "1.2.3"]
                   [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
-                  [nightcode "2.5.0.1" :exclusions [leiningen
-                                                    play-cljs/lein-template
-                                                    org.eclipse.jgit/org.eclipse.jgit]]])
+                  [nightcode "2.5.1"
+                   :exclusions [leiningen
+                                            play-cljs/lein-template
+                                            org.eclipse.jgit/org.eclipse.jgit]]])
 
 (require
   '[adzerk.boot-cljs :refer [cljs]]

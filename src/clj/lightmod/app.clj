@@ -61,7 +61,9 @@
               (when-let [pane (or (when (.isDirectory file)
                                     (dir-pane file))
                                   (get-in @runtime-state [:editor-panes selection])
-                                  (when-let [new-editor (e/editor-pane pref-state runtime-state file)]
+                                  (when-let [new-editor (e/editor-pane pref-state runtime-state file
+                                                          (when (#{"clj" "cljc"} (-> file .getName u/get-extension))
+                                                            e/eval-code))]
                                     (swap! runtime-state update :editor-panes assoc selection new-editor)
                                     new-editor))]
                 (let [content (.getContent tab)
@@ -96,14 +98,6 @@
 (defn path->ns [path leaf-name]
   (-> path io/file .getName sanitize-name (str "." leaf-name)))
 
-(defn delete-children-recursively! [path]
-  (let [f (io/file path)]
-    (when (.isDirectory f)
-      (doseq [f2 (.listFiles f)]
-        (delete-children-recursively! f2)))
-    (io/delete-file f))
-  nil)
-
 (defn compile-clj! [dir file-path]
   (try
     (with-security
@@ -124,7 +118,7 @@
                                :file ana/*cljs-file*}
                          (select-keys env [:line :column]))))]
     (when (.exists cljs-dir)
-      (delete-children-recursively! (.getCanonicalPath cljs-dir)))
+      (u/delete-children-recursively! cljs-dir))
     (try
       (with-security
         (build dir

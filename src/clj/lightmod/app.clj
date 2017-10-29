@@ -103,6 +103,16 @@
     (io/delete-file f))
   nil)
 
+(defn compile-clj! [dir file-path]
+  (try
+    (load-file file-path)
+    (lr/send-message! dir {:type :visual-clj})
+    (catch Exception e
+      (lr/send-message! dir {:type :visual-clj
+                             :exception (merge
+                                          {:message (.getMessage e)}
+                                          (select-keys (ex-data e) [:line :column]))}))))
+
 (defn compile-cljs! [dir]
   (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))
         warnings (atom [])
@@ -168,7 +178,7 @@
 
 (defn start-server! [project-pane dir]
   (stop-server! dir)
-  (load-file (.getCanonicalPath (io/file dir "server.clj")))
+  (compile-clj! dir (.getCanonicalPath (io/file dir "server.clj")))
   (let [-main (resolve (symbol (path->ns dir "server") "-main"))
         server (-main)
         port (-> server .getConnectors (aget 0) .getLocalPort)
@@ -192,8 +202,7 @@
                       :handler (fn [ctx {:keys [kind file]}]
                                  (when (and (= kind :modify)
                                             (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"]))
-                                   (load-file (.getCanonicalPath file))
-                                   (lr/send-message! dir {:type :visual-clj}))
+                                   (compile-clj! dir (.getCanonicalPath file)))
                                  (cond
                                    (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
                                         (not (u/parent-path? out-dir (.getCanonicalPath file))))

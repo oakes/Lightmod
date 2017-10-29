@@ -121,10 +121,7 @@
                        (merge {:message (ana/error-message warning-type extra)
                                :ns (-> env :ns :name)
                                :type warning-type
-                               :file (-> @runtime-state
-                                         :projects-dir
-                                         .getCanonicalPath
-                                         (u/get-relative-path ana/*cljs-file*))}
+                               :file ana/*cljs-file*}
                          (select-keys env [:line :column]))))]
     (when (.exists cljs-dir)
       (delete-children-recursively! (.getCanonicalPath cljs-dir)))

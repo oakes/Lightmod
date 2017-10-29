@@ -8,7 +8,8 @@
             [cljs.build.api :refer [build]]
             [hawk.core :as hawk]
             [lightmod.reload :as lr]
-            [cljs.analyzer :as ana])
+            [cljs.analyzer :as ana]
+            [eval-soup.core :refer [with-security]])
   (:import [javafx.application Platform]
            [javafx.scene.control Button ContentDisplay Label]
            [javafx.scene.image ImageView]
@@ -105,13 +106,12 @@
 
 (defn compile-clj! [dir file-path]
   (try
-    (load-file file-path)
+    (with-security
+      (load-file file-path))
     (lr/send-message! dir {:type :visual-clj})
     (catch Exception e
       (lr/send-message! dir {:type :visual-clj
-                             :exception (merge
-                                          {:message (.getMessage e)}
-                                          (select-keys (ex-data e) [:line :column]))}))))
+                             :exception {:message (.getMessage e)}}))))
 
 (defn compile-cljs! [dir]
   (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))
@@ -126,37 +126,38 @@
     (when (.exists cljs-dir)
       (delete-children-recursively! (.getCanonicalPath cljs-dir)))
     (try
-      (build dir
-        {:output-to (.getCanonicalPath (io/file dir "main.js"))
-         :output-dir (.getCanonicalPath (io/file dir ".out"))
-         :main (path->ns dir "client")
-         :asset-path ".out"
-         :preloads '[lightmod.init]
-         :foreign-libs (mapv #(update % :file copy-from-resources! dir)
-                         [{:file "js/p5.js"
-                           :provides ["p5.core"]}
-                          {:file "js/p5.tiledmap.js"
-                           :provides ["p5.tiled-map"]
-                           :requires ["p5.core"]}
-                          {:file "cljsjs/react/development/react.inc.js"
-                           :provides ["react" "cljsjs.react"]
-                           :file-min ".out/cljsjs/react/production/react.min.inc.js"
-                           :global-exports '{react React}}
-                          {:file "cljsjs/create-react-class/development/create-react-class.inc.js"
-                           :provides ["cljsjs.create-react-class" "create-react-class"]
-                           :requires ["react"]
-                           :file-min "cljsjs/create-react-class/production/create-react-class.min.inc.js"
-                           :global-exports '{create-react-class createReactClass}}
-                          {:file "cljsjs/react-dom/development/react-dom.inc.js"
-                           :provides ["react-dom" "cljsjs.react.dom"]
-                           :requires ["react"]
-                           :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
-                           :global-exports '{react-dom ReactDOM}}])
-         :externs (mapv #(copy-from-resources! % dir)
-                    ["cljsjs/react/common/react.ext.js"
-                     "cljsjs/create-react-class/common/create-react-class.ext.js"
-                     "cljsjs/react-dom/common/react-dom.ext.js"])
-         :warning-handlers [on-warning]})
+      (with-security
+        (build dir
+          {:output-to (.getCanonicalPath (io/file dir "main.js"))
+           :output-dir (.getCanonicalPath (io/file dir ".out"))
+           :main (path->ns dir "client")
+           :asset-path ".out"
+           :preloads '[lightmod.init]
+           :foreign-libs (mapv #(update % :file copy-from-resources! dir)
+                           [{:file "js/p5.js"
+                             :provides ["p5.core"]}
+                            {:file "js/p5.tiledmap.js"
+                             :provides ["p5.tiled-map"]
+                             :requires ["p5.core"]}
+                            {:file "cljsjs/react/development/react.inc.js"
+                             :provides ["react" "cljsjs.react"]
+                             :file-min ".out/cljsjs/react/production/react.min.inc.js"
+                             :global-exports '{react React}}
+                            {:file "cljsjs/create-react-class/development/create-react-class.inc.js"
+                             :provides ["cljsjs.create-react-class" "create-react-class"]
+                             :requires ["react"]
+                             :file-min "cljsjs/create-react-class/production/create-react-class.min.inc.js"
+                             :global-exports '{create-react-class createReactClass}}
+                            {:file "cljsjs/react-dom/development/react-dom.inc.js"
+                             :provides ["react-dom" "cljsjs.react.dom"]
+                             :requires ["react"]
+                             :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
+                             :global-exports '{react-dom ReactDOM}}])
+           :externs (mapv #(copy-from-resources! % dir)
+                      ["cljsjs/react/common/react.ext.js"
+                       "cljsjs/create-react-class/common/create-react-class.ext.js"
+                       "cljsjs/react-dom/common/react-dom.ext.js"])
+           :warning-handlers [on-warning]}))
       (lr/send-message! dir {:type :visual
                              :warnings @warnings})
       (catch Exception e

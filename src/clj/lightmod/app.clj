@@ -9,12 +9,14 @@
             [cljs.build.api :refer [build]]
             [hawk.core :as hawk]
             [lightmod.reload :as lr]
-            [cljs.analyzer :as ana])
+            [cljs.analyzer :as ana]
+            [lightmod.repl :as lrepl])
   (:import [javafx.application Platform]
            [javafx.scene.control Button ContentDisplay Label]
            [javafx.scene.image ImageView]
            [javafx.event EventHandler]
-           [javafx.fxml FXMLLoader]))
+           [javafx.fxml FXMLLoader]
+           [nightcode.utils Bridge]))
 
 (defn dir-pane [f]
   (let [pane (FXMLLoader/load (io/resource "dir.fxml"))]
@@ -178,7 +180,7 @@
     (reload-stop-fn)
     (hawk/stop! reload-file-watcher)))
 
-(definterface Bridge
+(definterface AppBridge
   (onevalcomplete [path results ns-name]))
 
 (defn start-server! [project-pane dir]
@@ -193,7 +195,7 @@
         reload-stop-fn (lr/start-reload-server! dir)
         reload-port (-> reload-stop-fn meta :local-port)
         out-dir (.getCanonicalPath (io/file dir ".out"))
-        bridge (reify Bridge
+        bridge (reify AppBridge
                  (onevalcomplete [this path results ns-name]
                    (when-let [editor (get-in @runtime-state [:editor-panes path])]
                      (-> editor
@@ -213,7 +215,7 @@
       {:pane project-pane
        :url url
        :server server
-       :bridge bridge
+       :app-bridge bridge
        :reload-stop-fn reload-stop-fn
        :clients #{}
        :editor-file-watcher (or (get-in @runtime-state [:projects dir :editor-file-watcher])
@@ -238,6 +240,61 @@
   (doto (.lookup project-pane "#app")
     (-> .getEngine (.loadContent "<html><body></body></html>"))))
 
+(defn init-repl! [webview on-load on-enter]
+  (doto webview
+    (.setVisible true)
+    (.setContextMenuEnabled false))
+  (let [engine (.getEngine webview)
+        bridge (reify Bridge
+                 (onload [this]
+                   (try
+                     (doto (.getEngine webview)
+                       (.executeScript "initConsole(true)")
+                       (.executeScript (case (:theme @pref-state)
+                                         :dark "changeTheme(true)"
+                                         :light "changeTheme(false)"))
+                       (.executeScript (format "setTextSize(%s)" (:text-size @pref-state))))
+                     (on-load)
+                     (catch Exception e (.printStackTrace e))))
+                 (onautosave [this])
+                 (onchange [this])
+                 (onenter [this text]
+                   (on-enter text))
+                 (oneval [this code]))]
+    (.setOnStatusChanged engine
+      (reify EventHandler
+        (handle [this event]
+          (-> engine
+              (.executeScript "window")
+              (.setMember "java" bridge)))))
+    (.load engine (str "http://localhost:"
+                    (:web-port @runtime-state)
+                    "/paren-soup.html"))
+    bridge))
+
+(defn init-server-repl! [{:keys [server-repl-pipes] :as project} inner-pane dir]
+  (when-let [{:keys [in-pipe out-pipe]} server-repl-pipes]
+    (doto out-pipe (.write "lightmod.repl/exit\n") (.flush))
+    (.close in-pipe))
+  (let [webview (.lookup inner-pane "#server_repl_webview")
+        pipes (lrepl/create-pipes)
+        start-ns (symbol (path->ns dir "server"))
+        on-recv (fn [text]
+                  (Platform/runLater
+                    (fn []
+                      (-> (.getEngine webview)
+                          (.executeScript "window")
+                          (.call "append" (into-array [text]))))))]
+    (assoc project
+      :server-repl-bridge
+      (init-repl! webview #(on-recv (str start-ns "=> "))
+        (fn [text]
+          (doto (:out-pipe pipes)
+            (.write text)
+            (.flush))))
+      :server-repl-pipes
+      (lrepl/start-repl-thread! pipes start-ns on-recv))))
+
 (defn start-app! [project-pane dir]
   (-> (fn []
         (compile-cljs! dir)
@@ -246,7 +303,23 @@
             (fn []
               (doto (.lookup project-pane "#app")
                 (.setContextMenuEnabled false)
-                (-> .getEngine (.load url)))))))
+                (-> .getEngine (.load url)))
+              (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))]
+                (swap! runtime-state update-in [:projects dir]
+                  (fn [{:keys [client-repl-bridge] :as project}]
+                    (if client-repl-bridge
+                      project
+                      (assoc project
+                        :client-repl-bridge
+                        (-> inner-pane
+                            (.lookup "#client_repl_webview")
+                            (init-repl! (fn []) println))))))
+                (swap! runtime-state update-in [:projects dir]
+                  (fn [{:keys [server-repl-bridge server-repl-pipes] :as project}]
+                    (if (and server-repl-bridge server-repl-pipes)
+                      project
+                      (init-server-repl! project inner-pane dir)))))))))
+                      
       (Thread.)
       .start))
 

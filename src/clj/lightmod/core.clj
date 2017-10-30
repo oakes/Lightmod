@@ -4,7 +4,9 @@
             [lightmod.app :as a]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
-            [nightcode.state :refer [pref-state runtime-state init-pref-state!]])
+            [nightcode.state :refer [pref-state runtime-state init-pref-state!]]
+            [nightcode.utils :as u]
+            [ring.middleware.reload])
   (:import [javafx.application Application]
            [javafx.fxml FXMLLoader]
            [javafx.stage Stage]
@@ -29,6 +31,7 @@
         scene (Scene. root 1242 768)
         projects (.lookup scene "#projects")
         projects-dir (io/file (System/getProperty "user.home") "LightmodProjects")]
+    (intern 'nightcode.shortcuts 'show-tooltip! (fn [& _])) ; don't show tooltips for now
     (System/setProperty "user.dir" (.getCanonicalPath projects-dir))
     ; create project tabs
     (doseq [file (.listFiles projects-dir)

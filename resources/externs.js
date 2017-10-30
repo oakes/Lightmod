@@ -4,3 +4,4 @@ window.java.onautosave = function(){};
 window.java.onchange = function(){};
 window.java.onenter = function(){};
 window.java.oneval = function(){};
+window.java.onevalcomplete = function(){};

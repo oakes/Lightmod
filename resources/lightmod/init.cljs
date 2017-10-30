@@ -39,10 +39,10 @@
             {:on-jsload +})
           (js/console.log "WARNING: Couldn't find reload port")))
       "GET")
+    ; hack thanks to http://stackoverflow.com/a/28414332/1663009
+    (set! (.-status js/window) "MY-MAGIC-VALUE")
+    (set! (.-status js/window) "")
     (when js/window.java
-      ; hack thanks to http://stackoverflow.com/a/28414332/1663009
-      (set! (.-status js/window) "MY-MAGIC-VALUE")
-      (set! (.-status js/window) "")
       (.onload js/window.java))))
 
 (defn form->serializable [form]

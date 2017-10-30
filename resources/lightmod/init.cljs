@@ -32,11 +32,11 @@
 (set! (.-onload js/window)
   (fn []
     (.send XhrIo
-      ".out/reload-port.txt"
+      ".out/options.edn"
       (fn [e]
         (if (.isSuccess (.-target e))
-          (client/connect (str "ws://localhost:" (.. e -target getResponseText))
-            {:on-jsload +})
+          (let [{:keys [reload-port]} (-> e .-target .getResponseText read-string)]
+            (client/connect (str "ws://localhost:" reload-port) {:on-jsload +}))
           (js/console.log "WARNING: Couldn't find reload port")))
       "GET")
     ; hack thanks to http://stackoverflow.com/a/28414332/1663009

@@ -307,7 +307,7 @@
                            .getEngine
                            (.executeScript "window")
                            (.call "setInstaRepl" (into-array [results])))))))]
-    (spit (io/file dir ".out/reload-port.txt") (str reload-port))
+    (spit (io/file dir ".out/options.edn") (pr-str {:reload-port reload-port}))
     (Platform/runLater
       (fn []
         (let [app (.lookup project-pane "#app")]

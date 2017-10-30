@@ -20,3 +20,6 @@
 
 (gobj/set js/window "setInstaRepl" set-instarepl)
 
+; don't use default compiler-fn
+(set! ir/create-compiler-fn (fn []))
+

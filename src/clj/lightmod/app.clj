@@ -53,9 +53,9 @@
 (defn eval-cljs-code [path dir code]
   (when-let [pane (get-in @runtime-state [:projects dir :pane])]
     (when-let [app (.lookup pane "#app")]
-      (-> (.getEngine app)
-          (.executeScript "lightmod.init")
-          (.call "eval_code" (into-array [path code])))
+      (some-> (.getEngine app)
+              (.executeScript "lightmod.init")
+              (.call "eval_code" (into-array [path code])))
       nil)))
 
 (defn set-selection-listener! [scene]
@@ -258,8 +258,8 @@
         server (-main)
         port (-> server .getConnectors (aget 0) .getLocalPort)
         url (str "http://localhost:" port "/"
-                 (-> dir io/file .getName)
-                 "/index.html")
+              (-> dir io/file .getName)
+              "/index.html")
         reload-stop-fn (lr/start-reload-server! dir)
         reload-port (-> reload-stop-fn meta :local-port)
         out-dir (.getCanonicalPath (io/file dir ".out"))

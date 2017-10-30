@@ -173,7 +173,7 @@
                                             {:message (.getMessage e)}
                                             (select-keys (ex-data e) [:line :column]))})))))
 
-(defn init-repl! [webview on-load on-enter]
+(defn init-repl! [webview first-run? on-load on-enter]
   (doto webview
     (.setVisible true)
     (.setContextMenuEnabled false))
@@ -200,12 +200,14 @@
           (-> engine
               (.executeScript "window")
               (.setMember "java" bridge)))))
-    (.load engine (str "http://localhost:"
-                    (:web-port @runtime-state)
-                    "/paren-soup.html"))
+    (if first-run?
+      (.load engine (str "http://localhost:"
+                      (:web-port @runtime-state)
+                      "/paren-soup.html"))
+      (.reload engine))
     bridge))
 
-(defn init-client-repl! [{:keys [server-repl-pipes pane] :as project} inner-pane dir]
+(defn init-client-repl! [{:keys [client-repl-bridge] :as project} inner-pane dir]
   (let [start-ns (symbol (path->ns dir "client"))
         on-recv (fn [text]
                   (Platform/runLater
@@ -215,9 +217,12 @@
       :client-repl-bridge
       (-> inner-pane
           (.lookup "#client_repl_webview")
-          (init-repl! #(on-recv (pr-str (list 'ns start-ns))) on-recv)))))
+          (init-repl!
+            (nil? client-repl-bridge)
+            #(on-recv (pr-str (list 'ns start-ns)))
+            on-recv)))))
 
-(defn init-server-repl! [{:keys [server-repl-pipes] :as project} inner-pane dir]
+(defn init-server-repl! [{:keys [server-repl-bridge server-repl-pipes] :as project} inner-pane dir]
   (when-let [{:keys [in-pipe out-pipe]} server-repl-pipes]
     (doto out-pipe (.write "lightmod.repl/exit\n") (.flush))
     (.close in-pipe))
@@ -232,7 +237,9 @@
                           (.call "append" (into-array [text]))))))]
     (assoc project
       :server-repl-bridge
-      (init-repl! webview #(on-recv (str start-ns "=> "))
+      (init-repl! webview
+        (nil? server-repl-bridge)
+        #(on-recv (str start-ns "=> "))
         (fn [text]
           (doto (:out-pipe pipes)
             (.write text)
@@ -254,7 +261,8 @@
 (defn start-server! [project-pane dir]
   (stop-server! dir)
   (compile-clj! dir (.getCanonicalPath (io/file dir "server.clj")))
-  (let [-main (resolve (symbol (path->ns dir "server") "-main"))
+  (let [first-run? (nil? (get-in @runtime-state [:projects dir]))
+        -main (resolve (symbol (path->ns dir "server") "-main"))
         server (-main)
         port (-> server .getConnectors (aget 0) .getLocalPort)
         url (str "http://localhost:" port "/"
@@ -268,15 +276,9 @@
                  (onload [this]
                    (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))]
                      (swap! runtime-state update-in [:projects dir]
-                       (fn [{:keys [client-repl-bridge] :as project}]
-                         (if client-repl-bridge
-                           project
-                           (init-client-repl! project inner-pane dir))))
+                       init-client-repl! inner-pane dir)
                      (swap! runtime-state update-in [:projects dir]
-                       (fn [{:keys [server-repl-bridge server-repl-pipes] :as project}]
-                         (if (and server-repl-bridge server-repl-pipes)
-                           project
-                           (init-server-repl! project inner-pane dir))))))
+                       init-server-repl! inner-pane dir)))
                  (onevalcomplete [this path results ns-name]
                    (if-not path
                      (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))
@@ -308,9 +310,10 @@
     (Platform/runLater
       (fn []
         (let [app (.lookup project-pane "#app")]
-          (doto app
-            (.setContextMenuEnabled false)
-            (-> .getEngine (.load url)))
+          (.setContextMenuEnabled app false)
+          (if first-run?
+            (-> app .getEngine (.load url))
+            (-> app .getEngine .reload))
           (.setOnStatusChanged (.getEngine app)
             (reify EventHandler
               (handle [this event]
@@ -318,7 +321,7 @@
                 (-> (.getEngine app)
                     (.executeScript "window")
                     (.setMember "java" bridge))))))))
-    (swap! runtime-state assoc-in [:projects dir]
+    (swap! runtime-state update-in [:projects dir] merge
       {:pane project-pane
        :url url
        :server server

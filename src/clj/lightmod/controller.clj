@@ -31,8 +31,7 @@
              [onNewFile [javafx.event.ActionEvent] void]
              [onOpenInFileBrowser [javafx.event.ActionEvent] void]
              [onOpenInWebBrowser [javafx.event.ActionEvent] void]
-             [onRestart [javafx.event.ActionEvent] void]
-             [onServerReplRestart [javafx.event.ActionEvent] void]]))
+             [onRestart [javafx.event.ActionEvent] void]]))
 
 ; remove
 
@@ -257,17 +256,4 @@
 
 (defn -onRestart [this ^ActionEvent event]
   (-> event .getSource .getScene restart!))
-
-; server-repl-restart!
-
-(defn server-repl-restart! [^Scene scene]
-  (when-let [project (a/get-project-dir)]
-    (let [dir (.getCanonicalPath project)]
-      (when-let [{:keys [pane] :as project} (get-in @runtime-state [:projects dir])]
-        (let [inner-pane (-> pane (.lookup "#project") .getItems (.get 1))]
-          (swap! runtime-state update-in [:projects dir]
-            a/init-server-repl! inner-pane dir))))))
-
-(defn -onServerReplRestart [this ^ActionEvent event]
-  (-> event .getSource .getScene server-repl-restart!))
 

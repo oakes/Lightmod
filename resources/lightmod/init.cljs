@@ -38,25 +38,35 @@
           (client/connect (str "ws://localhost:" (.. e -target getResponseText))
             {:on-jsload +})
           (js/console.log "WARNING: Couldn't find reload port")))
-      "GET")))
+      "GET")
+    (when js/window.java
+      ; hack thanks to http://stackoverflow.com/a/28414332/1663009
+      (set! (.-status js/window) "MY-MAGIC-VALUE")
+      (set! (.-status js/window) "")
+      (.onload js/window.java))))
 
 (defn form->serializable [form]
   (if (instance? js/Error form)
-    (array (or (some-> form .-cause .-message) (.-message form))
-      (.-fileName form) (.-lineNumber form))
+    [(or (some-> form .-cause .-message) (.-message form))
+     (.-fileName form)
+     (.-lineNumber form)]
     (pr-str form)))
 
 (def current-ns (atom 'cljs.user))
 
 (defn ^:export eval-code [path code]
-  (es/code->results
-    (read-string code)
-    (fn [results]
-      (.onevalcomplete js/window.java
-        path
-        (pr-str (mapv form->serializable results))
-        (str @current-ns)))
-    {:current-ns current-ns
-     :custom-load (fn [opts cb]
-                    (cb {:lang :clj :source ""}))}))
+  (let [; don't let instarepl change the client repl's current-ns
+        current-ns (if path
+                     (atom 'cljs.user)
+                     current-ns)]
+    (es/code->results
+      (read-string code)
+      (fn [results]
+        (.onevalcomplete js/window.java
+          path
+          (pr-str (mapv form->serializable results))
+          (str @current-ns)))
+      {:current-ns current-ns
+       :custom-load (fn [opts cb]
+                      (cb {:lang :clj :source ""}))})))
 

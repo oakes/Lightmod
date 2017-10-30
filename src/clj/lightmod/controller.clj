@@ -253,8 +253,7 @@
 (defn restart! [^Scene scene]
   (when-let [project (a/get-project-dir)]
     (when-let [pane (get-in @runtime-state [:projects (.getCanonicalPath project) :pane])]
-      (let [url (a/start-server! pane (.getCanonicalPath project))]
-        (-> (.lookup pane "#app") .getEngine (.load url))))))
+      (a/start-server! pane (.getCanonicalPath project)))))
 
 (defn -onRestart [this ^ActionEvent event]
   (-> event .getSource .getScene restart!))

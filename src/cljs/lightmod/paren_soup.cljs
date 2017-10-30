@@ -5,7 +5,10 @@
             [goog.object :as gobj]))
 
 (defn set-instarepl [results]
-  (let [results (read-string results)
+  (let [results (mapv
+                  ; paren-soup expects errors to be JS arrays
+                  #(if (vector? %) (into-array %) %)
+                  (read-string results))
         instarepl (.querySelector js/document "#instarepl")
         content (.querySelector js/document "#content")
         elems (ir/get-collections content)

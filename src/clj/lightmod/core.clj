@@ -55,8 +55,7 @@
                           (when (-> event .getTarget .isClosable)
                             (if (-> event .getTarget .isSelected)
                               (do
-                                (swap! pref-state assoc :selection
-                                  (.getCanonicalPath file))
+                                (swap! pref-state assoc :selection dir)
                                 (a/start-app! project-pane dir))
                               (let [editors (-> project-pane
                                                 (.lookup "#project")

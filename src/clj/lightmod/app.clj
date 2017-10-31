@@ -54,11 +54,9 @@
 (defn eval-cljs-code [path dir code]
   (when-let [pane (get-in @runtime-state [:projects dir :pane])]
     (when-let [app (.lookup pane "#app")]
-      (try
-        (some-> (.getEngine app)
-                (.executeScript "lightmod.init")
-                (.call "eval_code" (into-array [path code])))
-        (catch Exception _))
+      (some-> (.getEngine app)
+              (.executeScript "lightmod.init")
+              (.call "eval_code" (into-array [path code])))
       nil)))
 
 (defn set-selection-listener! [scene]

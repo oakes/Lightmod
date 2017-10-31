@@ -253,8 +253,12 @@
         (.call "append" (into-array [s])))))
 
 (defn redirect-stdout! [logs-atom]
-  (let [{:keys [out in-pipe] :as pipes} (lrepl/create-pipes)]
+  (let [{:keys [out in-pipe] :as pipes} (lrepl/create-pipes)
+        print-stream (-> out
+                         org.apache.commons.io.output.WriterOutputStream.
+                         java.io.PrintStream.)]
     (intern 'clojure.core '*out* out)
+    (System/setErr print-stream)
     (lrepl/pipe-into-console! in-pipe
       (fn [s]
         (binding [*out* (java.io.OutputStreamWriter. System/out)]
@@ -262,18 +266,32 @@
         (swap! logs-atom str s)))
     pipes))
 
-(defn init-server-logs! [{:keys [server-logs-atom] :as project} inner-pane dir]
-  (let [webview (.lookup inner-pane "#server_logs_webview")
-        bridge (init-console! webview false
-                 (fn []
-                   (append! webview @server-logs-atom)
-                   (add-watch server-logs-atom :append
-                     (fn [_ _ old-log new-log]
-                       (Platform/runLater
-                         #(append! webview (subs new-log (count old-log)))))))
-                 (fn []))]
-    (assoc project
-      :server-logs-bridge bridge)))
+(defn init-server-logs! [inner-pane dir]
+  (swap! runtime-state update-in [:projects dir]
+    (fn [project]
+      (let [logs (or (:server-logs-atom project)
+                     (atom ""))
+            pipes (redirect-stdout! logs)]
+        (assoc project
+          :server-logs-atom logs
+          :server-logs-pipes pipes))))
+  (Platform/runLater
+    (fn []
+      (swap! runtime-state update-in [:projects dir]
+        (fn [{:keys [server-logs-atom] :as project}]
+          (let [webview (.lookup inner-pane "#server_logs_webview")
+                bridge (init-console! webview false
+                         (fn []
+                           (append! webview @server-logs-atom)
+                           (add-watch server-logs-atom :append
+                             (fn [_ _ old-log new-log]
+                               (Platform/runLater
+                                 #(append! webview (subs new-log (count old-log)))))))
+                         (fn []))]
+            (assoc project
+              :server-logs-bridge bridge))))
+      (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*server-logs*"))]
+        (.lookup inner-pane "#server_logs_webview")))))
 
 (defn stop-server! [dir]
   (let [{:keys [server reload-stop-fn reload-file-watcher
@@ -293,16 +311,10 @@
 
 (defn start-server! [project-pane dir]
   (stop-server! dir)
-  (swap! runtime-state update-in [:projects dir]
-    (fn [project]
-      (let [logs (or (:server-logs-atom project)
-                     (atom ""))
-            pipes (redirect-stdout! logs)]
-        (assoc project
-          :server-logs-atom logs
-          :server-logs-pipes pipes))))
-  (compile-clj! dir (.getCanonicalPath (io/file dir "server.clj")))
-  (let [-main (resolve (symbol (path->ns dir "server") "-main"))
+  (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))
+        _ (init-server-logs! inner-pane dir)
+        _ (compile-clj! dir (.getCanonicalPath (io/file dir "server.clj")))
+        -main (resolve (symbol (path->ns dir "server") "-main"))
         server (-main)
         port (-> server .getConnectors (aget 0) .getLocalPort)
         url (str "http://localhost:" port "/"
@@ -312,21 +324,16 @@
         reload-port (-> reload-stop-fn meta :local-port)
         out-dir (.getCanonicalPath (io/file dir ".out"))
         client-repl-started? (atom false)
-        inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))
         bridge (reify AppBridge
                  (onload [this]
                    (swap! runtime-state update-in [:projects dir]
                      init-client-repl! inner-pane dir)
                    (swap! runtime-state update-in [:projects dir]
                      init-server-repl! inner-pane dir)
-                   (swap! runtime-state update-in [:projects dir]
-                     init-server-logs! inner-pane dir)
                    (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*client-repl*"))]
                      (.lookup inner-pane "#client_repl_webview"))
                    (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*server-repl*"))]
-                     (.lookup inner-pane "#server_repl_webview"))
-                   (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*server-logs*"))]
-                     (.lookup inner-pane "#server_logs_webview")))
+                     (.lookup inner-pane "#server_repl_webview")))
                  (onevalcomplete [this path results ns-name]
                    (if-not path
                      (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))

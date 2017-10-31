@@ -124,12 +124,13 @@
   (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))
         warnings (atom [])
         on-warning (fn [warning-type env extra]
-                     (swap! warnings conj
-                       (merge {:message (ana/error-message warning-type extra)
-                               :ns (-> env :ns :name)
-                               :type warning-type
-                               :file ana/*cljs-file*}
-                         (select-keys env [:line :column]))))]
+                     (when-not (#{:infer-warning} warning-type)
+                       (swap! warnings conj
+                         (merge {:message (ana/error-message warning-type extra)
+                                 :ns (-> env :ns :name)
+                                 :type warning-type
+                                 :file ana/*cljs-file*}
+                           (select-keys env [:line :column])))))]
     (when (.exists cljs-dir)
       (u/delete-children-recursively! cljs-dir))
     (try

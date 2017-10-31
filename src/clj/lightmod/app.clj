@@ -275,11 +275,11 @@
       :server-logs-bridge bridge)))
 
 (defn stop-server! [dir]
-  (let [{:keys [server reload-stop-fn reload-file-watcher]}
-        (get-in @runtime-state [:projects dir])]
-    (some-> server .stop)
-    (some-> reload-stop-fn (apply []))
-    (some-> reload-file-watcher hawk/stop!)))
+  (when-let [{:keys [server reload-stop-fn reload-file-watcher]}
+             (get-in @runtime-state [:projects dir])]
+    (.stop server)
+    (reload-stop-fn)
+    (hawk/stop! reload-file-watcher)))
 
 (definterface AppBridge
   (onload [])

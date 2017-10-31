@@ -252,26 +252,32 @@
         (.executeScript "window")
         (.call "append" (into-array [s])))))
 
-(defn redirect-stdout! [logs-atom]
-  (let [{:keys [out in-pipe] :as pipes} (lrepl/create-pipes)
-        print-stream (-> out
-                         org.apache.commons.io.output.WriterOutputStream.
-                         java.io.PrintStream.)]
-    (intern 'clojure.core '*out* out)
-    (System/setErr print-stream)
-    (lrepl/pipe-into-console! in-pipe
+(defn redirect-stdio! [logs-atom]
+  (let [stdout-pipes (lrepl/create-pipes)
+        stderr-pipes (lrepl/create-pipes)]
+    (intern 'clojure.core '*out* (:out stdout-pipes))
+    (System/setErr (-> (:out stderr-pipes)
+                       org.apache.commons.io.output.WriterOutputStream.
+                       java.io.PrintStream.))
+    (lrepl/pipe-into-console! (:in-pipe stdout-pipes)
       (fn [s]
         (binding [*out* (java.io.OutputStreamWriter. System/out)]
           (println s))
         (swap! logs-atom str s)))
-    pipes))
+    (lrepl/pipe-into-console! (:in-pipe stderr-pipes)
+      (fn [s]
+        (binding [*out* (java.io.OutputStreamWriter. System/out)]
+          (println s))
+        (swap! logs-atom str (str s \newline))))
+    {:stdout stdout-pipes
+     :stderr stderr-pipes}))
 
 (defn init-server-logs! [inner-pane dir]
   (swap! runtime-state update-in [:projects dir]
     (fn [project]
       (let [logs (or (:server-logs-atom project)
                      (atom ""))
-            pipes (redirect-stdout! logs)]
+            pipes (redirect-stdio! logs)]
         (assoc project
           :server-logs-atom logs
           :server-logs-pipes pipes))))
@@ -301,9 +307,13 @@
     (when reload-stop-fn (reload-stop-fn))
     (when reload-file-watcher (hawk/stop! reload-file-watcher))
     (when server-logs-atom (remove-watch server-logs-atom :append))
-    (when server-logs-pipes
-      (-> server-logs-pipes :in-pipe .close)
-      (-> server-logs-pipes :out .close))))
+    (when-let [{:keys [stdout stderr]} server-logs-pipes]
+      (doto stdout
+        (-> :in-pipe .close)
+        (-> :out .close))
+      (doto stderr
+        (-> :in-pipe .close)
+        (-> :out .close)))))
 
 (definterface AppBridge
   (onload [])

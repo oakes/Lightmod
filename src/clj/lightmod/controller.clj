@@ -4,7 +4,6 @@
             [nightcode.editors :as e]
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.utils :as u]
-            [eval-soup.core :as es]
             [lightmod.app :as a])
   (:import [javafx.event ActionEvent]
            [javafx.scene.control Alert Alert$AlertType ButtonType TextInputDialog]

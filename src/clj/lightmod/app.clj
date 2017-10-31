@@ -248,7 +248,8 @@
       (lrepl/start-repl-thread! pipes start-ns on-recv))))
 
 (defn init-server-logs! [{:keys [server-logs-pipes] :as project} inner-pane dir]
-  (when-let [{:keys [in-pipe]} server-logs-pipes]
+  (when-let [{:keys [out in-pipe]} server-logs-pipes]
+    (.close out)
     (.close in-pipe))
   (let [webview (.lookup inner-pane "#server_logs_webview")
         append! (fn [s]

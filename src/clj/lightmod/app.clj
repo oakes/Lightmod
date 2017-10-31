@@ -174,7 +174,7 @@
                                             {:message (.getMessage e)}
                                             (select-keys (ex-data e) [:line :column]))})))))
 
-(defn init-repl! [webview on-load on-enter]
+(defn init-console! [webview repl? on-load on-enter]
   (doto webview
     (.setVisible true)
     (.setContextMenuEnabled false))
@@ -183,7 +183,7 @@
                  (onload [this]
                    (try
                      (doto (.getEngine webview)
-                       (.executeScript "initConsole(true)")
+                       (.executeScript (if repl? "initConsole(true)" "initConsole(false)"))
                        (.executeScript (case (:theme @pref-state)
                                          :dark "changeTheme(true)"
                                          :light "changeTheme(false)"))
@@ -216,7 +216,8 @@
       :client-repl-bridge
       (-> inner-pane
           (.lookup "#client_repl_webview")
-          (init-repl!
+          (init-console!
+            true
             #(on-recv (pr-str (list 'ns start-ns)))
             on-recv)))))
 
@@ -235,7 +236,7 @@
                           (.call "append" (into-array [text]))))))]
     (assoc project
       :server-repl-bridge
-      (init-repl! webview
+      (init-console! webview true
         #(on-recv (str start-ns "=> "))
         (fn [text]
           (doto (:out-pipe pipes)
@@ -244,13 +245,39 @@
       :server-repl-pipes
       (lrepl/start-repl-thread! pipes start-ns on-recv))))
 
+(defn init-server-logs! [{:keys [server-logs-pipes] :as project} inner-pane dir]
+  (when-let [{:keys [in-pipe]} server-logs-pipes]
+    (.close in-pipe))
+  (let [webview (.lookup inner-pane "#server_logs_webview")
+        append! (fn [s]
+                  (when (seq s)
+                    (Platform/runLater
+                      (fn []
+                        (-> webview
+                            .getEngine
+                            (.executeScript "window")
+                            (.call "append" (into-array [s])))))))
+        {:keys [out in-pipe] :as pipes} (lrepl/create-pipes)
+        bridge (init-console! webview false
+                 (fn []
+                   (append! (:server-logs-history project))
+                   (intern 'clojure.core '*out* out)
+                   (intern 'clojure.core '*err* out)
+                   (lrepl/pipe-into-console! in-pipe
+                     (fn [s]
+                       (swap! runtime-state update-in [:projects dir :server-logs-history] str s)
+                       (append! s))))
+                 (fn []))]
+    (assoc project
+      :server-logs-pipes pipes
+      :server-logs-bridge bridge)))
+
 (defn stop-server! [dir]
-  (when-let [{:keys [server reload-stop-fn reload-file-watcher]}
-             (get-in @runtime-state [:projects dir])]
-    (.stop server)
-    (reload-stop-fn)
-    (hawk/stop! reload-file-watcher)
-    (swap! runtime-state update :projects dissoc dir)))
+  (let [{:keys [server reload-stop-fn reload-file-watcher]}
+        (get-in @runtime-state [:projects dir])]
+    (some-> server .stop)
+    (some-> reload-stop-fn (apply []))
+    (some-> reload-file-watcher hawk/stop!)))
 
 (definterface AppBridge
   (onload [])
@@ -276,10 +303,14 @@
                      init-client-repl! inner-pane dir)
                    (swap! runtime-state update-in [:projects dir]
                      init-server-repl! inner-pane dir)
+                   (swap! runtime-state update-in [:projects dir]
+                     init-server-logs! inner-pane dir)
                    (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*client-repl*"))]
                      (.lookup inner-pane "#client_repl_webview"))
                    (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*server-repl*"))]
-                     (.lookup inner-pane "#server_repl_webview")))
+                     (.lookup inner-pane "#server_repl_webview"))
+                   (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*server-logs*"))]
+                     (.lookup inner-pane "#server_logs_webview")))
                  (onevalcomplete [this path results ns-name]
                    (if-not path
                      (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))

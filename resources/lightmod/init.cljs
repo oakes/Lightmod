@@ -32,7 +32,7 @@
 (set! (.-onload js/window)
   (fn []
     (.send XhrIo
-      ".out/options.edn"
+      ".out/lightmod.edn"
       (fn [e]
         (if (.isSuccess (.-target e))
           (let [{:keys [reload-port]} (-> e .-target .getResponseText read-string)]

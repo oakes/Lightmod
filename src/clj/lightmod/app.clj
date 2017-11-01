@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.edn :as edn]
+            [clojure.set :as set]
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
@@ -12,7 +13,10 @@
             [cljs.analyzer :as ana]
             [lightmod.repl :as lrepl]
             [eval-soup.core :refer [with-security]]
-            [eval-soup.clojail :refer [thunk-timeout]])
+            [eval-soup.clojail :refer [thunk-timeout]]
+            [clojure.tools.namespace.find :as find]
+            [clojure.tools.namespace.file :as file]
+            [clojure.tools.namespace.track :as track])
   (:import [javafx.application Platform]
            [javafx.scene.control Button ContentDisplay Label]
            [javafx.scene.image ImageView]
@@ -20,6 +24,15 @@
            [javafx.fxml FXMLLoader]
            [netscape.javascript JSObject]
            [nightcode.utils Bridge]))
+
+(defn get-files-in-dep-order [dir]
+  (let [tracker (->> (file-seq (io/file dir))
+                     (filter #(file/file-with-extension? % (:extensions find/clj)))
+                     (file/add-files (track/tracker)))
+        ns->file (-> tracker
+                     :clojure.tools.namespace.file/filemap
+                     set/map-invert)]
+     (keep ns->file (:clojure.tools.namespace.track/load tracker))))
 
 (defn dir-pane [f]
   (let [pane (FXMLLoader/load (io/resource "dir.fxml"))]
@@ -124,20 +137,26 @@
         (when (instance? JSObject obj)
           (.call obj "show_error" (into-array [(pr-str msg)])))))))
 
-(defn compile-clj! [project-pane dir file-path]
-  (try
-    (when-not (.exists (io/file dir "server.clj"))
-      (throw (Exception. "You must have a server.clj file.")))
-    (with-security
-      (load-file file-path))
-    (send-message! project-pane dir {:type :visual-clj})
-    true
-    (catch Exception e
-      (.printStackTrace e)
-      (send-message! project-pane dir
-        {:type :visual-clj
-         :exception {:message (.getMessage e)}})
-      false)))
+(defn compile-clj!
+  ([project-pane dir]
+   (compile-clj! project-pane dir nil))
+  ([project-pane dir file-path]
+   (try
+     (when-not (.exists (io/file dir "server.clj"))
+       (throw (Exception. "You must have a server.clj file.")))
+     (with-security
+       (if file-path
+         (load-file file-path)
+         (doseq [f (get-files-in-dep-order dir)]
+           (load-file (.getCanonicalPath f)))))
+     (send-message! project-pane dir {:type :visual-clj})
+     true
+     (catch Exception e
+       (.printStackTrace e)
+       (send-message! project-pane dir
+         {:type :visual-clj
+          :exception {:message (.getMessage e)}})
+       false))))
 
 (defn compile-cljs! [project-pane dir]
   (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))
@@ -369,7 +388,7 @@
   (onevalcomplete [path results ns-name]))
 
 (defn start-server! [project-pane dir]
-  (when (and (compile-clj! project-pane dir (.getCanonicalPath (io/file dir "server.clj")))
+  (when (and (compile-clj! project-pane dir)
              (compile-cljs! project-pane dir))
     (when-let [server (run-main! project-pane dir)]
       (let [port (-> server .getConnectors (aget 0) .getLocalPort)

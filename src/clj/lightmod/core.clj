@@ -42,6 +42,12 @@
             :let [dir (.getCanonicalPath file)]
             :when (and (.isDirectory file)
                        (-> file .getName (.startsWith ".") not))]
+      (let [out-dir (io/file dir ".out")]
+        (try
+          (when (.exists out-dir)
+            (u/delete-children-recursively! out-dir))
+          (catch Exception _))
+        (.mkdir out-dir))
       (let [project-pane (FXMLLoader/load (io/resource "project.fxml"))]
         (-> projects
             .getTabs

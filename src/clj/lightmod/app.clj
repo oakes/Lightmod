@@ -319,11 +319,8 @@
 
 (defn init-reload-server! [dir]
   (let [reload-stop-fn (lr/start-reload-server! dir)
-        reload-port (-> reload-stop-fn meta :local-port)
-        f (io/file dir ".out" "options.edn")]
-    (doto f
-      (-> .getParentFile .mkdirs)
-      (spit (pr-str {:reload-port reload-port})))
+        reload-port (-> reload-stop-fn meta :local-port)]
+    (spit (io/file dir ".out" "options.edn") (pr-str {:reload-port reload-port}))
     (swap! runtime-state update-in [:projects dir] assoc
       :reload-stop-fn reload-stop-fn
       :clients #{})))

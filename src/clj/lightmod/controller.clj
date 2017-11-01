@@ -251,7 +251,7 @@
 (defn restart! [^Scene scene]
   (when-let [project (a/get-project-dir)]
     (when-let [pane (get-in @runtime-state [:projects (.getCanonicalPath project) :pane])]
-      (a/start-server! pane (.getCanonicalPath project)))))
+      (a/start-app! pane (.getCanonicalPath project)))))
 
 (defn -onRestart [this ^ActionEvent event]
   (-> event .getSource .getScene restart!))

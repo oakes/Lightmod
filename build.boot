@@ -8,10 +8,11 @@
                   [paren-soup "2.9.0" :scope "test"]
                   [mistakes-were-made "1.7.3" :scope "test"]
                   [cljsjs/codemirror "5.24.0-1" :scope "test"]
+                  [reagent "0.8.0-alpha2"]
+                  [cljs-react-material-ui "0.2.48"]
                   [http-kit "2.2.0"]
                   [hawk "0.2.11"]
                   [play-cljs "0.10.1"]
-                  [reagent "0.7.0"]
                   [ring "1.6.2"]
                   [compojure "1.6.0"]
                   [org.clojure/core.async "0.3.443"]
@@ -65,5 +66,6 @@
     (target)
     (with-pass-thru _
       (.renameTo (io/file "target/public/paren-soup.js") (io/file "resources/public/paren-soup.js"))
-      (.renameTo (io/file "target/public/codemirror.js") (io/file "resources/public/codemirror.js")))))
+      (.renameTo (io/file "target/public/codemirror.js") (io/file "resources/public/codemirror.js"))
+      (.renameTo (io/file "target/public/loading.js") (io/file "resources/public/loading.js")))))
 

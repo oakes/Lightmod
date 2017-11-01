@@ -6,6 +6,10 @@
             [nightcode.shortcuts :as shortcuts]
             [nightcode.state :refer [pref-state runtime-state init-pref-state!]]
             [nightcode.utils :as u]
+            [ring.adapter.jetty :refer [run-jetty]]
+            [ring.middleware.resource :refer [wrap-resource]]
+            [ring.middleware.content-type :refer [wrap-content-type]]
+            [ring.util.response :refer [redirect not-found]]
             [ring.middleware.reload])
   (:import [javafx.application Application]
            [javafx.fxml FXMLLoader]
@@ -97,13 +101,26 @@
                                 (filter #(= "auto_save" (.getId %)))
                                 first)]
       (.setSelected auto-save-button (:auto-save? @pref-state)))))
-                          
+
+(defn handler [request]
+  (case (:uri request)
+    "/" (redirect "/paren-soup.html")
+    (not-found "")))
+
+(defn start-web-server! []
+  (-> handler
+      (wrap-resource "public")
+      (wrap-content-type)
+      (run-jetty {:port 0 :join? false})
+      .getConnectors
+      (aget 0)
+      .getLocalPort))
 
 (defn -main [& args]
   (when (= "Linux" (System/getProperty "os.name"))
     (System/setProperty "prism.lcdtext" "false")
     (System/setProperty "prism.text" "t2k"))
-  (swap! runtime-state assoc :web-port (e/start-web-server!))
+  (swap! runtime-state assoc :web-port (start-web-server!))
   (Application/launch lightmod.core (into-array String args)))
 
 (defn dev-main [] (-main))

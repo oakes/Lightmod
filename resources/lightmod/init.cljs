@@ -55,18 +55,19 @@
 (def current-ns (atom 'cljs.user))
 
 (defn ^:export eval-code [path code]
-  (let [; don't let instarepl change the client repl's current-ns
-        current-ns (if path
-                     (atom 'cljs.user)
-                     current-ns)]
-    (es/code->results
-      (read-string code)
-      (fn [results]
-        (.onevalcomplete js/window.java
-          path
-          (pr-str (mapv form->serializable results))
-          (str @current-ns)))
-      {:current-ns current-ns
-       :custom-load (fn [opts cb]
-                      (cb {:lang :clj :source ""}))})))
+  (when js/window.java
+    (let [; don't let instarepl change the client repl's current-ns
+          current-ns (if path
+                       (atom 'cljs.user)
+                       current-ns)]
+      (es/code->results
+        (read-string code)
+        (fn [results]
+          (.onevalcomplete js/window.java
+            path
+            (pr-str (mapv form->serializable results))
+            (str @current-ns)))
+        {:current-ns current-ns
+         :custom-load (fn [opts cb]
+                        (cb {:lang :clj :source ""}))}))))
 

@@ -398,14 +398,14 @@
         (fn []
           (let [app (.lookup project-pane "#app")]
             (.setContextMenuEnabled app false)
-            (-> app .getEngine (.load url))
             (.setOnStatusChanged (.getEngine app)
               (reify EventHandler
                 (handle [this event]
                   ; set the bridge
                   (-> (.getEngine app)
                       (.executeScript "window")
-                      (.setMember "java" bridge))))))))
+                      (.setMember "java" bridge)))))
+            (-> app .getEngine (.load url)))))
       (swap! runtime-state update-in [:projects dir] merge
         {:url url
          :server server
@@ -440,11 +440,11 @@
   (let [app (.lookup project-pane "#app")
         start-server-once! (delay
                              (.start (Thread. #(start-server! project-pane dir))))]
-    (-> app .getEngine (.load (str "http://localhost:"
-                                (:web-port @runtime-state)
-                                "/loading.html")))
     (.setOnStatusChanged (.getEngine app)
       (reify EventHandler
         (handle [this event]
-          @start-server-once!)))))
+          @start-server-once!)))
+    (-> app .getEngine (.load (str "http://localhost:"
+                                (:web-port @runtime-state)
+                                "/loading.html")))))
 

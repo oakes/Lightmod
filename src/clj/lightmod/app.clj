@@ -2,7 +2,6 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.edn :as edn]
-            [clojure.set :as set]
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
@@ -12,132 +11,12 @@
             [lightmod.reload :as lr]
             [cljs.analyzer :as ana]
             [lightmod.repl :as lrepl]
+            [lightmod.ui :as ui]
+            [lightmod.utils :as lu]
             [eval-soup.core :refer [with-security]]
-            [eval-soup.clojail :refer [thunk-timeout]]
-            [clojure.tools.namespace.find :as find]
-            [clojure.tools.namespace.file :as file]
-            [clojure.tools.namespace.track :as track])
+            [eval-soup.clojail :refer [thunk-timeout]])
   (:import [javafx.application Platform]
-           [javafx.scene.control Button ContentDisplay Label]
-           [javafx.scene.image ImageView]
-           [javafx.event EventHandler]
-           [javafx.fxml FXMLLoader]
-           [netscape.javascript JSObject]
-           [nightcode.utils Bridge]))
-
-(defn copy-from-resources! [from to]
-  (let [dest (io/file to ".out" from)]
-    (when-not (.exists dest)
-      (.mkdirs (.getParentFile dest))
-      (spit dest (slurp (io/resource from))))
-    (str (-> to io/file .getName) "/.out/" from)))
-
-(defn path->ns [path leaf-name]
-  (-> path io/file .getName (str/replace #"_" "-") (str "." leaf-name)))
-
-(defn get-files-in-dep-order [dir]
-  (let [out-dir (.getCanonicalPath (io/file dir ".out"))
-        tracker (->> (file-seq (io/file dir))
-                     (remove #(u/parent-path? out-dir (.getCanonicalPath %)))
-                     (filter #(file/file-with-extension? % ["clj" "cljc"]))
-                     (file/add-files (track/tracker)))
-        ns->file (-> tracker
-                     :clojure.tools.namespace.file/filemap
-                     set/map-invert)]
-    (keep ns->file (:clojure.tools.namespace.track/load tracker))))
-
-(defn check-namespaces! [dir server?]
-  (let [out-dir (.getCanonicalPath (io/file dir ".out"))
-        tracker (->> (file-seq (io/file dir))
-                     (remove #(u/parent-path? out-dir (.getCanonicalPath %)))
-                     (filter #(file/file-with-extension? % (if server?
-                                                             ["clj" "cljc"]
-                                                             ["cljs"])))
-                     (file/add-files (track/tracker)))
-        ns->file (-> tracker
-                     :clojure.tools.namespace.file/filemap
-                     set/map-invert)
-        ns-start (path->ns dir "")]
-    (doseq [[ns-name file] ns->file]
-      (when-not (.startsWith (name ns-name) ns-start)
-        (throw (Exception. (format "The ns name in %s must start with \"%s\""
-                             (.getName file) ns-start)))))))
-
-(defn dir-pane [f]
-  (let [pane (FXMLLoader/load (io/resource "dir.fxml"))]
-    (shortcuts/add-tooltips! pane [:#up :#new_file :#open_in_file_browser :#close])
-    (doseq [file (.listFiles f)
-            :when (and  (-> file .getName (.startsWith ".") not)
-                        (-> file .getName (not= "main.js")))]
-      (-> (.lookup pane "#filegrid")
-          .getContent
-          .getChildren
-          (.add (doto (if-let [icon (u/get-icon-path file)]
-                        (Button. "" (doto (Label. (.getName file)
-                                            (doto (ImageView. icon)
-                                              (.setFitWidth 90)
-                                              (.setPreserveRatio true)))
-                                      (.setContentDisplay ContentDisplay/TOP)))
-                        (Button. (.getName file)))
-                  (.setPrefWidth 150)
-                  (.setPrefHeight 150)
-                  (.setOnAction (reify EventHandler
-                                  (handle [this event]
-                                    (swap! pref-state assoc :selection (.getCanonicalPath file)))))))))
-    pane))
-
-(defn get-project-dir
-  ([] (some-> @pref-state :selection io/file get-project-dir))
-  ([file]
-   (loop [f file]
-     (when-let [parent (.getParentFile f)]
-       (if (= parent (:projects-dir @runtime-state))
-         f
-         (recur parent))))))
-
-(defn eval-cljs-code [path dir code]
-  (when-let [pane (get-in @runtime-state [:projects dir :pane])]
-    (when-let [app (.lookup pane "#app")]
-      (some-> (.getEngine app)
-              (.executeScript "lightmod.init")
-              (.call "eval_code" (into-array [path code])))
-      nil)))
-
-(defn set-selection-listener! [scene]
-  (add-watch pref-state :selection-changed
-    (fn [_ _ _ {:keys [selection]}]
-      (when selection
-        (let [file (io/file selection)]
-          (when-let [project-dir (get-project-dir file)]
-            (when-let [tab (->> (.lookup scene "#projects")
-                                .getTabs
-                                (filter #(= (.getText %) (.getName project-dir)))
-                                first)]
-              (when-let [pane (or (when (.isDirectory file)
-                                    (dir-pane file))
-                                  (get-in @runtime-state [:editor-panes selection])
-                                  (when-let [new-editor (e/editor-pane pref-state runtime-state file
-                                                          (case (-> file .getName u/get-extension)
-                                                            ("clj" "cljc") e/eval-code
-                                                            "cljs" (partial eval-cljs-code selection (.getCanonicalPath project-dir))
-                                                            nil))]
-                                    (swap! runtime-state update :editor-panes assoc selection new-editor)
-                                    new-editor))]
-                (let [content (.getContent tab)
-                      editors (-> content
-                                  (.lookup "#project")
-                                  .getItems
-                                  (.get 1)
-                                  (.lookup "#editors"))]
-                  (shortcuts/hide-tooltips! content)
-                  (doto (.getChildren editors)
-                    (.clear)
-                    (.add pane))
-                  (.setDisable (.lookup editors "#up") (= selection (.getCanonicalPath project-dir)))
-                  (.setDisable (.lookup editors "#close") (.isDirectory file))
-                  (Platform/runLater
-                    (fn []
-                      (some-> (.lookup pane "#webview") .requestFocus))))))))))))
+           [javafx.event EventHandler]))
 
 (defn send-message! [project-pane dir msg]
   (lr/send-message! dir msg)
@@ -147,7 +26,7 @@
                              (.lookup "#app")
                              .getEngine
                              (.executeScript "lightmod.loading"))]
-        (when (instance? JSObject obj)
+        (when (instance? netscape.javascript.JSObject obj)
           (.call obj "show_error" (into-array [(pr-str msg)])))))))
 
 (defn compile-clj!
@@ -157,11 +36,11 @@
    (try
      (when-not (.exists (io/file dir "server.clj"))
        (throw (Exception. "You must have a server.clj file.")))
-     (check-namespaces! dir true)
+     (lu/check-namespaces! dir true)
      (with-security
        (if file-path
          (load-file file-path)
-         (doseq [f (get-files-in-dep-order dir)]
+         (doseq [f (lu/get-files-in-dep-order dir)]
            (load-file (.getCanonicalPath f)))))
      (send-message! project-pane dir {:type :visual-clj})
      true
@@ -190,14 +69,14 @@
     (try
       (when-not (.exists (io/file dir "client.cljs"))
         (throw (Exception. "You must have a client.cljs file.")))
-      (check-namespaces! dir false)
+      (lu/check-namespaces! dir false)
       (build dir
         {:output-to (.getCanonicalPath (io/file dir "main.js"))
          :output-dir (.getCanonicalPath (io/file dir ".out"))
-         :main (path->ns dir "client")
+         :main (lu/path->ns dir "client")
          :asset-path ".out"
          :preloads '[lightmod.init]
-         :foreign-libs (mapv #(update % :file copy-from-resources! dir)
+         :foreign-libs (mapv #(update % :file lu/copy-from-resources! dir)
                          [{:file "js/p5.js"
                            :provides ["p5.core"]}
                           {:file "js/p5.tiledmap.js"
@@ -217,7 +96,7 @@
                            :requires ["react"]
                            :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
                            :global-exports '{react-dom ReactDOM}}])
-         :externs (mapv #(copy-from-resources! % dir)
+         :externs (mapv #(lu/copy-from-resources! % dir)
                     ["cljsjs/react/common/react.ext.js"
                      "cljsjs/create-react-class/common/create-react-class.ext.js"
                      "cljsjs/react-dom/common/react-dom.ext.js"])
@@ -237,7 +116,7 @@
 
 (defn run-main! [project-pane dir]
   (try
-    (let [-main (resolve (symbol (path->ns dir "server") "-main"))]
+    (let [-main (resolve (symbol (lu/path->ns dir "server") "-main"))]
       (when (nil? -main)
         (throw (Exception. "Can't find a -main function in your server.clj file.")))
       (let [server (thunk-timeout #(with-security (-main)) 5000)]
@@ -250,75 +129,6 @@
         {:type :visual-clj
          :exception {:message (.getMessage e)}})
       nil)))
-
-(defn init-console! [webview repl? on-load on-enter]
-  (doto webview
-    (.setVisible true)
-    (.setContextMenuEnabled false))
-  (let [engine (.getEngine webview)
-        bridge (reify Bridge
-                 (onload [this]
-                   (try
-                     (doto (.getEngine webview)
-                       (.executeScript (if repl? "initConsole(true)" "initConsole(false)"))
-                       (.executeScript (case (:theme @pref-state)
-                                         :dark "changeTheme(true)"
-                                         :light "changeTheme(false)"))
-                       (.executeScript (format "setTextSize(%s)" (:text-size @pref-state))))
-                     (on-load)
-                     (catch Exception e (.printStackTrace e))))
-                 (onautosave [this])
-                 (onchange [this])
-                 (onenter [this text]
-                   (on-enter text))
-                 (oneval [this code]))]
-    (.setOnStatusChanged engine
-      (reify EventHandler
-        (handle [this event]
-          (-> engine
-              (.executeScript "window")
-              (.setMember "java" bridge)))))
-    (.load engine (str "http://localhost:"
-                    (:web-port @runtime-state)
-                    "/paren-soup.html"))
-    bridge))
-
-(defn init-client-repl! [project inner-pane dir]
-  (let [webview (.lookup inner-pane "#client_repl_webview")
-        start-ns (symbol (path->ns dir "client"))
-        on-recv (fn [text]
-                  (Platform/runLater
-                    (fn []
-                      (eval-cljs-code nil dir (pr-str [text])))))]
-    (assoc project
-      :client-repl-bridge
-      (init-console! webview true
-        #(on-recv (pr-str (list 'ns start-ns)))
-        on-recv))))
-
-(defn init-server-repl! [{:keys [server-repl-pipes] :as project} inner-pane dir]
-  (when-let [{:keys [in-pipe out-pipe]} server-repl-pipes]
-    (doto out-pipe (.write "lightmod.repl/exit\n") (.flush))
-    (.close in-pipe))
-  (let [webview (.lookup inner-pane "#server_repl_webview")
-        pipes (lrepl/create-pipes)
-        start-ns (symbol (path->ns dir "server"))
-        on-recv (fn [text]
-                  (Platform/runLater
-                    (fn []
-                      (-> (.getEngine webview)
-                          (.executeScript "window")
-                          (.call "append" (into-array [text]))))))]
-    (assoc project
-      :server-repl-bridge
-      (init-console! webview true
-        #(on-recv (str start-ns "=> "))
-        (fn [text]
-          (doto (:out-pipe pipes)
-            (.write text)
-            (.flush))))
-      :server-repl-pipes
-      (lrepl/start-repl-thread! pipes start-ns on-recv))))
 
 (defn append! [webview s]
   (when (seq s)
@@ -359,7 +169,7 @@
   (swap! runtime-state update-in [:projects dir]
     (fn [{:keys [server-logs-atom] :as project}]
       (let [webview (.lookup inner-pane "#server_logs_webview")
-            bridge (init-console! webview false
+            bridge (ui/init-console! webview false
                      (fn []
                        (append! webview @server-logs-atom)
                        (add-watch server-logs-atom :append
@@ -415,9 +225,9 @@
                      (onload [this]
                        (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))]
                          (swap! runtime-state update-in [:projects dir]
-                           init-client-repl! inner-pane dir)
+                           ui/init-client-repl! inner-pane dir)
                          (swap! runtime-state update-in [:projects dir]
-                           init-server-repl! inner-pane dir)))
+                           ui/init-server-repl! inner-pane dir)))
                      (onevalcomplete [this path results ns-name]
                        (if-not path
                          (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))

@@ -2,6 +2,7 @@
   (:require [clojure.java.io :as io]
             [lightmod.controller :as c]
             [lightmod.app :as a]
+            [lightmod.ui :as ui]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
             [nightcode.state :refer [pref-state runtime-state init-pref-state!]]
@@ -28,7 +29,7 @@
               :#find c/focus-on-find!
               :#close c/close!
               :#new_file c/new-file!
-              :#open_in_file_browser c/open-in-file-browser!})
+              :#open_in_file_browser ui/open-in-file-browser!})
 
 (defn -start [^lightmod.core app ^Stage stage]
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
@@ -47,13 +48,13 @@
             (u/delete-children-recursively! out-dir))
           (catch Exception _))
         (.mkdir out-dir))
-      (-> projects .getTabs (.add (c/create-tab scene file))))
+      (-> projects .getTabs (.add (ui/create-tab scene file a/start-app! a/stop-app!))))
     ; initialize state
     (swap! runtime-state assoc
       :stage stage
       :prefs (.node (Preferences/userRoot) "lightmod")
       :projects-dir projects-dir)
-    (a/set-selection-listener! scene)
+    (ui/set-selection-listener! scene)
     (init-pref-state! {:selection nil
                        :theme :light
                        :text-size 16
@@ -99,7 +100,7 @@
                       :when (and (.isDirectory f)
                                  (-> f .getName (.startsWith ".") not)
                                  (-> f .getName tab-names not))]
-                (.add tabs (c/create-tab scene f))))
+                (.add tabs (ui/create-tab scene f a/start-app! a/stop-app!))))
             ; remove any editors whose files no longer exist
             (e/remove-non-existing-editors! runtime-state)
             ; force existing selection to refresh

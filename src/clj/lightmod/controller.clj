@@ -6,15 +6,15 @@
             [nightcode.shortcuts :as shortcuts]
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.utils :as u]
-            [lightmod.app :as a])
-  (:import [javafx.event ActionEvent EventHandler]
-           [javafx.scene.control Alert Alert$AlertType ButtonType TextInputDialog Tab]
+            [lightmod.app :as a]
+            [lightmod.ui :as ui]
+            [lightmod.utils :as lu])
+  (:import [javafx.event ActionEvent]
+           [javafx.scene.control Alert Alert$AlertType ButtonType TextInputDialog]
            [javafx.stage DirectoryChooser FileChooser StageStyle Window Modality]
            [javafx.application Platform]
            [javafx.scene Scene]
-           [javafx.scene.input KeyEvent KeyCode]
-           [java.awt Desktop]
-           [javafx.fxml FXMLLoader])
+           [javafx.scene.input KeyEvent KeyCode])
   (:gen-class
    :methods [[onNewBasicWebApp [javafx.event.ActionEvent] void]
              [onRename [javafx.event.ActionEvent] void]
@@ -36,62 +36,7 @@
              [onOpenInWebBrowser [javafx.event.ActionEvent] void]
              [onRestart [javafx.event.ActionEvent] void]]))
 
-(declare open-in-file-browser!)
-
-(defn alert! [message]
-  (doto (Alert. Alert$AlertType/INFORMATION)
-    (.setContentText message)
-    (.setHeaderText nil)
-    .showAndWait))
-
-(defn create-tab [^Scene scene file]
-  (let [project-pane (FXMLLoader/load (io/resource "project.fxml"))
-        dir (.getCanonicalPath file)]
-    (doto (Tab.)
-      (.setText (.getName file))
-      (.setContent project-pane)
-      (.setClosable true)
-      (.setOnCloseRequest
-        (reify EventHandler
-          (handle [this event]
-            (.consume event))))
-      (.setOnSelectionChanged
-        (reify EventHandler
-          (handle [this event]
-            (when (-> event .getTarget .isClosable)
-              (if (-> event .getTarget .isSelected)
-                (do
-                  (swap! pref-state assoc :selection dir)
-                  (a/start-app! project-pane dir))
-                (let [editors (-> project-pane
-                                  (.lookup "#project")
-                                  .getItems
-                                  (.get 1)
-                                  (.lookup "#editors"))]
-                  (a/stop-app! project-pane dir)
-                  (shortcuts/hide-tooltips! project-pane)
-                  (.clear (.getChildren editors))))))))
-      (.setOnCloseRequest
-        (reify EventHandler
-          (handle [this event]
-            (if (u/show-warning! scene "Delete Project"
-                  "To delete this project, you'll need to delete its folder.")
-              (do
-                (swap! pref-state assoc :selection dir)
-                (open-in-file-browser! scene))
-              (.consume event))))))))
-
 ; new project
-
-(defn sanitize-name [s]
-  (as-> s $
-        (str/trim $)
-        (str/lower-case $)
-        (str/replace $ "'" "")
-        (str/replace $ #"[^a-z0-9]" " ")
-        (str/split $ #" ")
-        (remove empty? $)
-        (str/join "-" $)))
 
 (defn new-project! [^Scene scene project-type]
   (let [dialog (doto (TextInputDialog.)
@@ -100,14 +45,14 @@
                  (.setGraphic nil)
                  (.initOwner (.getWindow scene))
                  (.initModality Modality/WINDOW_MODAL))]
-    (when-let [project-name (some-> dialog .showAndWait (.orElse nil) sanitize-name)]
+    (when-let [project-name (some-> dialog .showAndWait (.orElse nil) lu/sanitize-name)]
       (when-let [projects-dir (:projects-dir @runtime-state)]
         (let [dir-name (str/replace project-name #"-" "_")
               dir (io/file projects-dir dir-name)]
           (if (or (empty? project-name)
                   (-> project-name (.charAt 0) Character/isLetter not)
                   (.exists dir))
-            (alert! "The name must be unique and start with a letter.")
+            (ui/alert! "The name must be unique and start with a letter.")
             (do
               (.mkdir dir)
               (doseq [file-name (->> (str "templates/" (name project-type) "/files.edn")
@@ -121,7 +66,8 @@
                                     (str/replace "{{dir}}" dir-name))
                                 content)]
                   (spit (io/file dir file-name) content)))
-              (-> scene (.lookup "#projects") .getTabs (.add (create-tab scene dir))))))))))
+              (-> scene (.lookup "#projects") .getTabs
+                  (.add (ui/create-tab scene dir a/start-app! a/stop-app!))))))))))
 
 (defn -onNewBasicWebApp [this ^ActionEvent event]
   (-> event .getSource .getScene (new-project! :basic-web)))
@@ -317,33 +263,18 @@
 
 ; open in file browser
 
-(defn open-in-file-browser! [^Scene scene]
-  (when-let [path (:selection @pref-state)]
-    (javax.swing.SwingUtilities/invokeLater
-      (fn []
-        (when (Desktop/isDesktopSupported)
-          (.open (Desktop/getDesktop) (io/file path)))))))
-
 (defn -onOpenInFileBrowser [this ^ActionEvent event]
-  (-> event .getSource .getScene open-in-file-browser!))
+  (-> event .getSource .getScene ui/open-in-file-browser!))
 
 ; open in browser
 
-(defn open-in-web-browser! [^Scene scene]
-  (when-let [project (a/get-project-dir)]
-    (when-let [url (get-in @runtime-state [:projects (.getCanonicalPath project) :url])]
-      (javax.swing.SwingUtilities/invokeLater
-        (fn []
-          (when (Desktop/isDesktopSupported)
-            (.browse (Desktop/getDesktop) (java.net.URI. url))))))))
-
 (defn -onOpenInWebBrowser [this ^ActionEvent event]
-  (-> event .getSource .getScene open-in-web-browser!))
+  (-> event .getSource .getScene ui/open-in-web-browser!))
 
 ; restart
 
 (defn restart! [^Scene scene]
-  (when-let [project (a/get-project-dir)]
+  (when-let [project (lu/get-project-dir)]
     (when-let [pane (get-in @runtime-state [:projects (.getCanonicalPath project) :pane])]
       (a/start-app! pane (.getCanonicalPath project)))))
 

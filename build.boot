@@ -8,16 +8,9 @@
                   [paren-soup "2.9.0" :scope "test"]
                   [mistakes-were-made "1.7.3" :scope "test"]
                   [cljsjs/codemirror "5.24.0-1" :scope "test"]
-                  [reagent "0.8.0-alpha2"]
-                  [cljs-react-material-ui "0.2.48"]
                   [http-kit "2.2.0"]
                   [hawk "0.2.11"]
-                  [play-cljs "0.10.1"]
-                  [ring "1.6.2"]
-                  [compojure "1.6.0"]
                   [org.clojure/core.async "0.3.443"]
-                  [com.rpl/specter "1.0.4"]
-                  [org.clojure/tools.cli "0.3.5"]
                   [org.clojure/clojure "1.9.0-beta2"]
                   [eval-soup "1.2.3"]
                   [org.clojure/tools.namespace "0.3.0-alpha4"]
@@ -25,7 +18,18 @@
                   [nightcode "2.5.1"
                    :exclusions [leiningen
                                 play-cljs/lein-template
-                                org.eclipse.jgit/org.eclipse.jgit]]])
+                                org.eclipse.jgit/org.eclipse.jgit]]
+                  [ring "1.6.2"]
+                  [reagent "0.8.0-alpha2"]
+                  [cljs-react-material-ui "0.2.48"]
+                  [org.clojure/tools.cli "0.3.5"]
+                  [rum "0.10.8"]
+                  [play-cljs "0.10.1"]
+                  [compojure "1.6.0"]
+                  [com.rpl/specter "1.0.4"]
+                  [com.taoensso/sente "1.11.0"]
+                  [com.h2database/h2 "1.4.196"]
+                  [honeysql "0.9.1"]])
 
 (require
   '[adzerk.boot-cljs :refer [cljs]]

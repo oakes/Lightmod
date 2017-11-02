@@ -1,23 +1,28 @@
 (ns {{name}}.server
   (:require [clojure.java.io :as io]
-            [ring.adapter.jetty :refer [run-jetty]]
+            [org.httpkit.server :refer [run-server]]
             [ring.middleware.content-type :refer [wrap-content-type]]
+            [ring.middleware.keyword-params :refer [wrap-keyword-params]]
+            [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]))
 
 (defn handler [{:keys [uri] :as request}]
-  (let [uri (if (.startsWith uri "/") (subs uri 1) uri)
-        file (io/file (System/getProperty "user.dir") uri)]
-    (if (.isFile file)
-      {:status 200
-       :body (slurp file)}
-      (not-found ""))))
+  (or ; if the request is a static file
+      (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
+        (when (.isFile file)
+          {:status 200
+           :body (slurp file)}))
+      ; otherwise, send a 404
+      (not-found "Page not found")))
 
 (defn -main [& args]
   (-> #'handler
+      (wrap-content-type)
+      (wrap-keyword-params)
+      (wrap-params)
       (wrap-reload)
       (wrap-resource "{{dir}}")
-      (wrap-content-type)
-      (run-jetty {:port 0 :join? false})))
+      (run-server {:port 0})))
 

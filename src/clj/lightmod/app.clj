@@ -118,8 +118,9 @@
       (when (nil? -main)
         (throw (Exception. "Can't find a -main function in your server.clj file.")))
       (let [server (thunk-timeout #(with-security (-main)) 5000)]
-        (when-not (instance? org.eclipse.jetty.server.Server server)
-          (throw (Exception. "The -main function in server.clj must call run-jetty as its last step.")))
+        (when-not (and (fn? server)
+                       (-> server meta :local-port number?))
+          (throw (Exception. "The -main function in server.clj must call run-server as its last step.")))
         server))
     (catch Exception e
       (.printStackTrace e)
@@ -193,7 +194,7 @@
   (let [{:keys [server reload-stop-fn reload-file-watcher
                 server-logs-atom server-logs-pipes]}
         (get-in @runtime-state [:projects dir])]
-    (when server (.stop server))
+    (when server (server))
     (when reload-stop-fn (reload-stop-fn))
     (when reload-file-watcher (hawk/stop! reload-file-watcher))
     (when server-logs-atom (remove-watch server-logs-atom :append))
@@ -254,7 +255,7 @@
                (send-message! project-pane dir))
       ; run the server's main function and load the webview
       (when-let [server (run-main! project-pane dir)]
-        (let [port (-> server .getConnectors (aget 0) .getLocalPort)
+        (let [port (-> server meta :local-port)
               url (str "http://localhost:" port "/"
                     (-> dir io/file .getName)
                     "/index.html")

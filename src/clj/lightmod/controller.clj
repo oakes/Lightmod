@@ -33,6 +33,12 @@
              [onOpenInWebBrowser [javafx.event.ActionEvent] void]
              [onRestart [javafx.event.ActionEvent] void]]))
 
+(defn alert! [message]
+  (doto (Alert. Alert$AlertType/INFORMATION)
+    (.setContentText message)
+    (.setHeaderText nil)
+    .showAndWait))
+
 ; new project
 
 (defn sanitize-name [s]
@@ -59,8 +65,7 @@
           (if (or (empty? project-name)
                   (-> project-name (.charAt 0) Character/isLetter not)
                   (.exists dir))
-            (u/show-warning! scene "Invalid Name"
-              "The name must be unique and start with a letter.")
+            (alert! "The name must be unique and start with a letter.")
             (do
               (.mkdir dir)
               (doseq [file (->> project-type

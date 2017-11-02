@@ -284,19 +284,17 @@
     bridge))
 
 (defn init-client-repl! [project inner-pane dir]
-  (let [start-ns (symbol (path->ns dir "client"))
+  (let [webview (.lookup inner-pane "#client_repl_webview")
+        start-ns (symbol (path->ns dir "client"))
         on-recv (fn [text]
                   (Platform/runLater
                     (fn []
                       (eval-cljs-code nil dir (pr-str [text])))))]
     (assoc project
       :client-repl-bridge
-      (-> inner-pane
-          (.lookup "#client_repl_webview")
-          (init-console!
-            true
-            #(on-recv (pr-str (list 'ns start-ns)))
-            on-recv)))))
+      (init-console! webview true
+        #(on-recv (pr-str (list 'ns start-ns)))
+        on-recv))))
 
 (defn init-server-repl! [{:keys [server-repl-pipes] :as project} inner-pane dir]
   (when-let [{:keys [in-pipe out-pipe]} server-repl-pipes]
@@ -370,9 +368,7 @@
                              #(append! webview (subs new-log (count old-log)))))))
                      (fn []))]
         (assoc project
-          :server-logs-bridge bridge))))
-  (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*server-logs*"))]
-    (.lookup inner-pane "#server_logs_webview")))
+          :server-logs-bridge bridge)))))
 
 (defn init-reload-server! [dir]
   (let [reload-stop-fn (lr/start-reload-server! dir)
@@ -418,11 +414,7 @@
                          (swap! runtime-state update-in [:projects dir]
                            init-client-repl! inner-pane dir)
                          (swap! runtime-state update-in [:projects dir]
-                           init-server-repl! inner-pane dir)
-                         (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*client-repl*"))]
-                           (.lookup inner-pane "#client_repl_webview"))
-                         (swap! runtime-state assoc-in [:editor-panes (.getCanonicalPath (io/file dir "*server-repl*"))]
-                           (.lookup inner-pane "#server_repl_webview"))))
+                           init-server-repl! inner-pane dir)))
                      (onevalcomplete [this path results ns-name]
                        (if-not path
                          (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))

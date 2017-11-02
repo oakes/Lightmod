@@ -109,7 +109,7 @@
                                 (filter #(= "auto_save" (.getId %)))
                                 first)]
       (.setSelected auto-save-button (:auto-save? @pref-state)))
-    ; refresh tabs on window focus
+    ; refresh things on window focus
     (.addListener (.focusedProperty stage)
       (reify ChangeListener
         (changed [this observable old-value new-value]
@@ -128,7 +128,14 @@
                       :when (and (.isDirectory f)
                                  (-> f .getName (.startsWith ".") not)
                                  (-> f .getName tab-names not))]
-                (.add tabs (create-tab f))))))))))
+                (.add tabs (create-tab f))))
+            ; remove any editors whose files no longer exist
+            (e/remove-non-existing-editors! runtime-state)
+            ; force existing selection to refresh
+            (when-let [selection (:selection @pref-state)]
+              (doto pref-state
+                (swap! assoc :selection nil)
+                (swap! assoc :selection selection)))))))))
 
 (defn handler [request]
   (case (:uri request)

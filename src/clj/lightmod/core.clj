@@ -15,7 +15,6 @@
            [javafx.fxml FXMLLoader]
            [javafx.stage Stage]
            [javafx.scene Scene]
-           [javafx.scene.control Tab]
            [java.util.prefs Preferences]
            [javafx.event EventHandler]
            [javafx.beans.value ChangeListener])
@@ -30,43 +29,6 @@
               :#close c/close!
               :#new_file c/new-file!
               :#open_in_file_browser c/open-in-file-browser!})
-
-(defn create-tab [scene file]
-  (let [project-pane (FXMLLoader/load (io/resource "project.fxml"))
-        dir (.getCanonicalPath file)]
-    (doto (Tab.)
-      (.setText (.getName file))
-      (.setContent project-pane)
-      (.setClosable true)
-      (.setOnCloseRequest
-        (reify EventHandler
-          (handle [this event]
-            (.consume event))))
-      (.setOnSelectionChanged
-        (reify EventHandler
-          (handle [this event]
-            (when (-> event .getTarget .isClosable)
-              (if (-> event .getTarget .isSelected)
-                (do
-                  (swap! pref-state assoc :selection dir)
-                  (a/start-app! project-pane dir))
-                (let [editors (-> project-pane
-                                  (.lookup "#project")
-                                  .getItems
-                                  (.get 1)
-                                  (.lookup "#editors"))]
-                  (a/stop-app! project-pane dir)
-                  (shortcuts/hide-tooltips! project-pane)
-                  (.clear (.getChildren editors))))))))
-      (.setOnCloseRequest
-        (reify EventHandler
-          (handle [this event]
-            (if (u/show-warning! scene "Delete Project"
-                  "To delete this project, you'll need to delete its folder.")
-              (do
-                (swap! pref-state assoc :selection dir)
-                (c/open-in-file-browser! scene))
-              (.consume event))))))))
 
 (defn -start [^lightmod.core app ^Stage stage]
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
@@ -85,7 +47,7 @@
             (u/delete-children-recursively! out-dir))
           (catch Exception _))
         (.mkdir out-dir))
-      (-> projects .getTabs (.add (create-tab scene file))))
+      (-> projects .getTabs (.add (c/create-tab scene file))))
     ; initialize state
     (swap! runtime-state assoc
       :stage stage
@@ -137,7 +99,7 @@
                       :when (and (.isDirectory f)
                                  (-> f .getName (.startsWith ".") not)
                                  (-> f .getName tab-names not))]
-                (.add tabs (create-tab scene f))))
+                (.add tabs (c/create-tab scene f))))
             ; remove any editors whose files no longer exist
             (e/remove-non-existing-editors! runtime-state)
             ; force existing selection to refresh

@@ -1,17 +1,20 @@
 (ns lightmod.controller
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
+            [clojure.edn :as edn]
             [nightcode.editors :as e]
+            [nightcode.shortcuts :as shortcuts]
             [nightcode.state :refer [pref-state runtime-state]]
             [nightcode.utils :as u]
             [lightmod.app :as a])
-  (:import [javafx.event ActionEvent]
-           [javafx.scene.control Alert Alert$AlertType ButtonType TextInputDialog]
+  (:import [javafx.event ActionEvent EventHandler]
+           [javafx.scene.control Alert Alert$AlertType ButtonType TextInputDialog Tab]
            [javafx.stage DirectoryChooser FileChooser StageStyle Window Modality]
            [javafx.application Platform]
            [javafx.scene Scene]
            [javafx.scene.input KeyEvent KeyCode]
-           [java.awt Desktop])
+           [java.awt Desktop]
+           [javafx.fxml FXMLLoader])
   (:gen-class
    :methods [[onNewBasicWebApp [javafx.event.ActionEvent] void]
              [onRename [javafx.event.ActionEvent] void]
@@ -33,11 +36,50 @@
              [onOpenInWebBrowser [javafx.event.ActionEvent] void]
              [onRestart [javafx.event.ActionEvent] void]]))
 
+(declare open-in-file-browser!)
+
 (defn alert! [message]
   (doto (Alert. Alert$AlertType/INFORMATION)
     (.setContentText message)
     (.setHeaderText nil)
     .showAndWait))
+
+(defn create-tab [^Scene scene file]
+  (let [project-pane (FXMLLoader/load (io/resource "project.fxml"))
+        dir (.getCanonicalPath file)]
+    (doto (Tab.)
+      (.setText (.getName file))
+      (.setContent project-pane)
+      (.setClosable true)
+      (.setOnCloseRequest
+        (reify EventHandler
+          (handle [this event]
+            (.consume event))))
+      (.setOnSelectionChanged
+        (reify EventHandler
+          (handle [this event]
+            (when (-> event .getTarget .isClosable)
+              (if (-> event .getTarget .isSelected)
+                (do
+                  (swap! pref-state assoc :selection dir)
+                  (a/start-app! project-pane dir))
+                (let [editors (-> project-pane
+                                  (.lookup "#project")
+                                  .getItems
+                                  (.get 1)
+                                  (.lookup "#editors"))]
+                  (a/stop-app! project-pane dir)
+                  (shortcuts/hide-tooltips! project-pane)
+                  (.clear (.getChildren editors))))))))
+      (.setOnCloseRequest
+        (reify EventHandler
+          (handle [this event]
+            (if (u/show-warning! scene "Delete Project"
+                  "To delete this project, you'll need to delete its folder.")
+              (do
+                (swap! pref-state assoc :selection dir)
+                (open-in-file-browser! scene))
+              (.consume event))))))))
 
 ; new project
 
@@ -68,19 +110,18 @@
             (alert! "The name must be unique and start with a letter.")
             (do
               (.mkdir dir)
-              (doseq [file (->> project-type
-                                name
-                                (str "templates/")
-                                io/resource
-                                io/file
-                                .listFiles
-                                seq)]
-                (let [content (if (-> file .getName u/get-extension #{"clj" "cljs" "cljc"})
-                                (-> (slurp file)
+              (doseq [file-name (->> (str "templates/" (name project-type) "/files.edn")
+                                     io/resource
+                                     slurp
+                                     edn/read-string)]
+                (let [content (slurp (io/resource (str "templates/" (name project-type) "/" file-name)))
+                      content (if (-> file-name u/get-extension #{"clj" "cljs" "cljc"})
+                                (-> content
                                     (str/replace "{{name}}" project-name)
                                     (str/replace "{{dir}}" dir-name))
-                                (slurp file))]
-                  (spit (io/file dir (.getName file)) content))))))))))
+                                content)]
+                  (spit (io/file dir file-name) content)))
+              (-> scene (.lookup "#projects") .getTabs (.add (create-tab scene dir))))))))))
 
 (defn -onNewBasicWebApp [this ^ActionEvent event]
   (-> event .getSource .getScene (new-project! :basic-web)))

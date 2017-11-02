@@ -13,7 +13,8 @@
            [javafx.scene.input KeyEvent KeyCode]
            [java.awt Desktop])
   (:gen-class
-   :methods [[onRename [javafx.event.ActionEvent] void]
+   :methods [[onNewBasicWebApp [javafx.event.ActionEvent] void]
+             [onRename [javafx.event.ActionEvent] void]
              [onRemove [javafx.event.ActionEvent] void]
              [onUp [javafx.event.ActionEvent] void]
              [onSave [javafx.event.ActionEvent] void]
@@ -31,6 +32,53 @@
              [onOpenInFileBrowser [javafx.event.ActionEvent] void]
              [onOpenInWebBrowser [javafx.event.ActionEvent] void]
              [onRestart [javafx.event.ActionEvent] void]]))
+
+; new project
+
+(defn sanitize-name [s]
+  (as-> s $
+        (str/trim $)
+        (str/lower-case $)
+        (str/split $ #" ")
+        (remove empty? $)
+        (str/join "-" $)
+        (str/replace $ #"_" "-")
+        (str/replace $ #"[^a-z0-9\-]" "")))
+
+(defn new-project! [^Scene scene project-type]
+  (let [dialog (doto (TextInputDialog.)
+                 (.setTitle "New Project")
+                 (.setHeaderText "Enter a name for your project.")
+                 (.setGraphic nil)
+                 (.initOwner (.getWindow scene))
+                 (.initModality Modality/WINDOW_MODAL))]
+    (when-let [project-name (some-> dialog .showAndWait (.orElse nil) sanitize-name)]
+      (when-let [projects-dir (:projects-dir @runtime-state)]
+        (let [dir-name (str/replace project-name #"-" "_")
+              dir (io/file projects-dir dir-name)]
+          (if (or (empty? project-name)
+                  (-> project-name (.charAt 0) Character/isLetter not)
+                  (.exists dir))
+            (u/show-warning! scene "Invalid Name"
+              "The name must be unique and start with a letter.")
+            (do
+              (.mkdir dir)
+              (doseq [file (->> project-type
+                                name
+                                (str "templates/")
+                                io/resource
+                                io/file
+                                .listFiles
+                                seq)]
+                (let [content (if (-> file .getName u/get-extension #{"clj" "cljs" "cljc"})
+                                (-> (slurp file)
+                                    (str/replace "{{name}}" project-name)
+                                    (str/replace "{{dir}}" dir-name))
+                                (slurp file))]
+                  (spit (io/file dir (.getName file)) content))))))))))
+
+(defn -onNewBasicWebApp [this ^ActionEvent event]
+  (-> event .getSource .getScene (new-project! :basic-web)))
 
 ; remove
 

@@ -67,7 +67,7 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" prefHeight="200.0" prefWidth="200.0" text="Basic Web App" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewBasicWebApp" prefHeight="200.0" prefWidth="200.0" text="Basic Web App" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>

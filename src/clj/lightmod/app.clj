@@ -117,14 +117,8 @@
       (spit dest (slurp (io/resource from))))
     (str (-> to io/file .getName) "/.out/" from)))
 
-(defn sanitize-name [s]
-  (-> s
-      str/lower-case
-      (str/replace #"[ _]" "-")
-      (str/replace #"[^a-z0-9\-]" "")))
-
 (defn path->ns [path leaf-name]
-  (-> path io/file .getName sanitize-name (str "." leaf-name)))
+  (-> path io/file .getName (str/replace #"_" "-") (str "." leaf-name)))
 
 (defn send-message! [project-pane dir msg]
   (lr/send-message! dir msg)

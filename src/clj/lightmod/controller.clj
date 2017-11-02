@@ -87,11 +87,11 @@
   (as-> s $
         (str/trim $)
         (str/lower-case $)
+        (str/replace $ "'" "")
+        (str/replace $ #"[^a-z0-9]" " ")
         (str/split $ #" ")
         (remove empty? $)
-        (str/join "-" $)
-        (str/replace $ #"_" "-")
-        (str/replace $ #"[^a-z0-9\-]" "")))
+        (str/join "-" $)))
 
 (defn new-project! [^Scene scene project-type]
   (let [dialog (doto (TextInputDialog.)

@@ -67,12 +67,10 @@
       (.setOnCloseRequest
         (reify EventHandler
           (handle [this event]
-            (if (u/show-warning! scene "Delete Project"
-                  "To delete this project, you'll need to delete its folder.")
-              (do
-                (swap! pref-state assoc :selection dir)
-                (open-in-file-browser! scene))
-              (.consume event))))))))
+            (alert! "To delete this project, you'll need to delete its folder.")
+            (swap! pref-state assoc :selection dir)
+            (open-in-file-browser! scene)
+            (.consume event)))))))
 
 (defn dir-pane [f]
   (let [pane (FXMLLoader/load (io/resource "dir.fxml"))]

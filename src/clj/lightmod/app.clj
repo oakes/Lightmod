@@ -25,14 +25,43 @@
            [netscape.javascript JSObject]
            [nightcode.utils Bridge]))
 
+(defn copy-from-resources! [from to]
+  (let [dest (io/file to ".out" from)]
+    (when-not (.exists dest)
+      (.mkdirs (.getParentFile dest))
+      (spit dest (slurp (io/resource from))))
+    (str (-> to io/file .getName) "/.out/" from)))
+
+(defn path->ns [path leaf-name]
+  (-> path io/file .getName (str/replace #"_" "-") (str "." leaf-name)))
+
 (defn get-files-in-dep-order [dir]
-  (let [tracker (->> (file-seq (io/file dir))
-                     (filter #(file/file-with-extension? % (:extensions find/clj)))
+  (let [out-dir (.getCanonicalPath (io/file dir ".out"))
+        tracker (->> (file-seq (io/file dir))
+                     (remove #(u/parent-path? out-dir (.getCanonicalPath %)))
+                     (filter #(file/file-with-extension? % ["clj" "cljc"]))
                      (file/add-files (track/tracker)))
         ns->file (-> tracker
                      :clojure.tools.namespace.file/filemap
                      set/map-invert)]
-     (keep ns->file (:clojure.tools.namespace.track/load tracker))))
+    (keep ns->file (:clojure.tools.namespace.track/load tracker))))
+
+(defn check-namespaces! [dir server?]
+  (let [out-dir (.getCanonicalPath (io/file dir ".out"))
+        tracker (->> (file-seq (io/file dir))
+                     (remove #(u/parent-path? out-dir (.getCanonicalPath %)))
+                     (filter #(file/file-with-extension? % (if server?
+                                                             ["clj" "cljc"]
+                                                             ["cljs"])))
+                     (file/add-files (track/tracker)))
+        ns->file (-> tracker
+                     :clojure.tools.namespace.file/filemap
+                     set/map-invert)
+        ns-start (path->ns dir "")]
+    (doseq [[ns-name file] ns->file]
+      (when-not (.startsWith (name ns-name) ns-start)
+        (throw (Exception. (format "The ns name in %s must start with \"%s\""
+                             (.getName file) ns-start)))))))
 
 (defn dir-pane [f]
   (let [pane (FXMLLoader/load (io/resource "dir.fxml"))]
@@ -110,16 +139,6 @@
                     (fn []
                       (some-> (.lookup pane "#webview") .requestFocus))))))))))))
 
-(defn copy-from-resources! [from to]
-  (let [dest (io/file to ".out" from)]
-    (when-not (.exists dest)
-      (.mkdirs (.getParentFile dest))
-      (spit dest (slurp (io/resource from))))
-    (str (-> to io/file .getName) "/.out/" from)))
-
-(defn path->ns [path leaf-name]
-  (-> path io/file .getName (str/replace #"_" "-") (str "." leaf-name)))
-
 (defn send-message! [project-pane dir msg]
   (lr/send-message! dir msg)
   (Platform/runLater
@@ -138,6 +157,7 @@
    (try
      (when-not (.exists (io/file dir "server.clj"))
        (throw (Exception. "You must have a server.clj file.")))
+     (check-namespaces! dir true)
      (with-security
        (if file-path
          (load-file file-path)
@@ -170,6 +190,7 @@
     (try
       (when-not (.exists (io/file dir "client.cljs"))
         (throw (Exception. "You must have a client.cljs file.")))
+      (check-namespaces! dir false)
       (build dir
         {:output-to (.getCanonicalPath (io/file dir "main.js"))
          :output-dir (.getCanonicalPath (io/file dir ".out"))

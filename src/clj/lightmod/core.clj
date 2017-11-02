@@ -17,7 +17,8 @@
            [javafx.scene Scene]
            [javafx.scene.control Tab]
            [java.util.prefs Preferences]
-           [javafx.event EventHandler])
+           [javafx.event EventHandler]
+           [javafx.beans.value ChangeListener])
   (:gen-class :extends javafx.application.Application))
 
 (def actions {:#up c/up!
@@ -30,6 +31,34 @@
               :#new_file c/new-file!
               :#open_in_file_browser c/open-in-file-browser!})
 
+(defn create-tab [file]
+  (let [project-pane (FXMLLoader/load (io/resource "project.fxml"))
+        dir (.getCanonicalPath file)]
+    (doto (Tab.)
+      (.setText (.getName file))
+      (.setContent project-pane)
+      (.setClosable true)
+      (.setOnCloseRequest
+        (reify EventHandler
+          (handle [this event]
+            (.consume event))))
+      (.setOnSelectionChanged
+        (reify EventHandler
+          (handle [this event]
+            (when (-> event .getTarget .isClosable)
+              (if (-> event .getTarget .isSelected)
+                (do
+                  (swap! pref-state assoc :selection dir)
+                  (a/start-app! project-pane dir))
+                (let [editors (-> project-pane
+                                  (.lookup "#project")
+                                  .getItems
+                                  (.get 1)
+                                  (.lookup "#editors"))]
+                  (a/stop-app! project-pane dir)
+                  (shortcuts/hide-tooltips! project-pane)
+                  (.clear (.getChildren editors)))))))))))
+
 (defn -start [^lightmod.core app ^Stage stage]
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
         scene (Scene. root 1242 768)
@@ -39,42 +68,15 @@
     (System/setProperty "user.dir" (.getCanonicalPath projects-dir))
     ; create project tabs
     (doseq [file (.listFiles projects-dir)
-            :let [dir (.getCanonicalPath file)]
             :when (and (.isDirectory file)
                        (-> file .getName (.startsWith ".") not))]
-      (let [out-dir (io/file dir ".out")]
+      (let [out-dir (io/file file ".out")]
         (try
           (when (.exists out-dir)
             (u/delete-children-recursively! out-dir))
           (catch Exception _))
         (.mkdir out-dir))
-      (let [project-pane (FXMLLoader/load (io/resource "project.fxml"))]
-        (-> projects
-            .getTabs
-            (.add (doto (Tab.)
-                    (.setText (.getName file))
-                    (.setContent project-pane)
-                    (.setClosable true)
-                    (.setOnCloseRequest
-                      (reify EventHandler
-                        (handle [this event]
-                          (.consume event))))
-                    (.setOnSelectionChanged
-                      (reify EventHandler
-                        (handle [this event]
-                          (when (-> event .getTarget .isClosable)
-                            (if (-> event .getTarget .isSelected)
-                              (do
-                                (swap! pref-state assoc :selection dir)
-                                (a/start-app! project-pane dir))
-                              (let [editors (-> project-pane
-                                                (.lookup "#project")
-                                                .getItems
-                                                (.get 1)
-                                                (.lookup "#editors"))]
-                                (a/stop-app! project-pane dir)
-                                (shortcuts/hide-tooltips! project-pane)
-                                (.clear (.getChildren editors)))))))))))))
+      (-> projects .getTabs (.add (create-tab file))))
     ; initialize state
     (swap! runtime-state assoc
       :stage stage
@@ -106,7 +108,27 @@
                                 .getItems
                                 (filter #(= "auto_save" (.getId %)))
                                 first)]
-      (.setSelected auto-save-button (:auto-save? @pref-state)))))
+      (.setSelected auto-save-button (:auto-save? @pref-state)))
+    ; refresh tabs on window focus
+    (.addListener (.focusedProperty stage)
+      (reify ChangeListener
+        (changed [this observable old-value new-value]
+          (when new-value
+            (let [tabs (.getTabs projects)
+                  tab-names (set (mapv #(.getText %) tabs))]
+              ; remove tabs if their directory disappeared
+              (doseq [tab tabs
+                      :let [f (->> tab .getText (io/file projects-dir))
+                            dir (.getCanonicalPath f)]
+                      :when (and (.isClosable tab)
+                                 (-> f .exists not))]
+                (.remove tabs tab))
+              ; add tabs for directories that appeared
+              (doseq [f (.listFiles projects-dir)
+                      :when (and (.isDirectory f)
+                                 (-> f .getName (.startsWith ".") not)
+                                 (-> f .getName tab-names not))]
+                (.add tabs (create-tab f))))))))))
 
 (defn handler [request]
   (case (:uri request)

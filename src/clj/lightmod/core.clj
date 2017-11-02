@@ -53,7 +53,8 @@
     (swap! runtime-state assoc
       :stage stage
       :prefs (.node (Preferences/userRoot) "lightmod")
-      :projects-dir projects-dir)
+      :projects-dir projects-dir
+      :build-chan (a/start-build-thread!))
     (ui/set-selection-listener! scene)
     (init-pref-state! {:selection nil
                        :theme :light

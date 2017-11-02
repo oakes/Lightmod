@@ -17,6 +17,9 @@
          f
          (recur parent))))))
 
+(defn current-project? [dir]
+  (= dir (.getCanonicalPath (get-project-dir))))
+
 (defn sanitize-name [s]
   (as-> s $
         (str/trim $)

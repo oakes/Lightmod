@@ -14,25 +14,29 @@
             [lightmod.ui :as ui]
             [lightmod.utils :as lu]
             [eval-soup.core :refer [with-security]]
-            [eval-soup.clojail :refer [thunk-timeout]])
+            [eval-soup.clojail :refer [thunk-timeout]]
+            [clojure.core.async :refer [chan sliding-buffer put! <!! go-loop]])
   (:import [javafx.application Platform]
            [javafx.event EventHandler]))
 
 (defn send-message! [project-pane dir msg]
-  (lr/send-message! dir msg)
-  (Platform/runLater
-    (fn []
-      (when-let [obj (some-> project-pane
-                             (.lookup "#app")
-                             .getEngine
-                             (.executeScript "lightmod.loading"))]
-        (when (instance? netscape.javascript.JSObject obj)
-          (.call obj "show_error" (into-array [(pr-str msg)])))))))
+  (when (lu/current-project? dir)
+    (lr/send-message! dir msg)
+    (Platform/runLater
+      (fn []
+        (when-let [obj (some-> project-pane
+                               (.lookup "#app")
+                               .getEngine
+                               (.executeScript "lightmod.loading"))]
+          (when (instance? netscape.javascript.JSObject obj)
+            (.call obj "show_error" (into-array [(pr-str msg)]))))))
+    (and (not (:exception msg))
+         (empty? (:warnings msg)))))
 
 (defn compile-clj!
-  ([project-pane dir]
-   (compile-clj! project-pane dir nil))
-  ([project-pane dir file-path]
+  ([dir]
+   (compile-clj! dir nil))
+  ([dir file-path]
    (try
      (when-not (.exists (io/file dir "server.clj"))
        (throw (Exception. "You must have a server.clj file.")))
@@ -42,16 +46,13 @@
          (load-file file-path)
          (doseq [f (lu/get-files-in-dep-order dir)]
            (load-file (.getCanonicalPath f)))))
-     (send-message! project-pane dir {:type :visual-clj})
-     true
+     {:type :visual-clj}
      (catch Exception e
        (.printStackTrace e)
-       (send-message! project-pane dir
-         {:type :visual-clj
-          :exception {:message (.getMessage e)}})
-       false))))
+       {:type :visual-clj
+        :exception {:message (.getMessage e)}}))))
 
-(defn compile-cljs! [project-pane dir]
+(defn compile-cljs! [dir]
   (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))
         warnings (atom [])
         on-warning (fn [warning-type env extra]
@@ -101,18 +102,15 @@
                      "cljsjs/create-react-class/common/create-react-class.ext.js"
                      "cljsjs/react-dom/common/react-dom.ext.js"])
          :warning-handlers [on-warning]})
-      (send-message! project-pane dir {:type :visual
-                                       :warnings @warnings})
-      (empty? @warnings)
+      {:type :visual
+       :warnings @warnings}
       (catch Exception e
         (.printStackTrace e)
-        (send-message! project-pane dir
-          {:type :visual
-           :warnings @warnings
-           :exception (merge
-                        {:message (.getMessage e)}
-                        (select-keys (ex-data e) [:line :column]))})
-        false))))
+        {:type :visual
+         :warnings @warnings
+         :exception (merge
+                      {:message (.getMessage e)}
+                      (select-keys (ex-data e) [:line :column]))}))))
 
 (defn run-main! [project-pane dir]
   (try
@@ -211,82 +209,99 @@
   (onload [])
   (onevalcomplete [path results ns-name]))
 
+(defn create-app-bridge [project-pane dir]
+  (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))
+        client-repl-started? (atom false)]
+    (reify AppBridge
+      (onload [this]
+        (swap! runtime-state update-in [:projects dir]
+          ui/init-client-repl! inner-pane dir)
+        (swap! runtime-state update-in [:projects dir]
+          ui/init-server-repl! inner-pane dir))
+      (onevalcomplete [this path results ns-name]
+        (if-not path
+          (let [result (-> results edn/read-string first)
+                result (cond
+                         (vector? result)
+                         (str "Error: " (first result))
+                         @client-repl-started?
+                         result
+                         :else
+                         (do
+                           (reset! client-repl-started? true)
+                           nil))
+                result (when (seq result)
+                         (str result "\n"))
+                result (str result ns-name "=> ")]
+            (-> inner-pane
+                (.lookup "#client_repl_webview")
+                .getEngine
+                (.executeScript "window")
+                (.call "append" (into-array [result]))))
+          (when-let [editor (get-in @runtime-state [:editor-panes path])]
+            (-> editor
+                (.lookup "#webview")
+                .getEngine
+                (.executeScript "window")
+                (.call "setInstaRepl" (into-array [results])))))))))
+
 (defn start-server! [project-pane dir]
-  (when (and (compile-clj! project-pane dir)
-             (compile-cljs! project-pane dir))
-    (when-let [server (run-main! project-pane dir)]
-      (let [port (-> server .getConnectors (aget 0) .getLocalPort)
-            url (str "http://localhost:" port "/"
-                  (-> dir io/file .getName)
-                  "/index.html")
-            out-dir (.getCanonicalPath (io/file dir ".out"))
-            client-repl-started? (atom false)
-            bridge (reify AppBridge
-                     (onload [this]
-                       (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))]
-                         (swap! runtime-state update-in [:projects dir]
-                           ui/init-client-repl! inner-pane dir)
-                         (swap! runtime-state update-in [:projects dir]
-                           ui/init-server-repl! inner-pane dir)))
-                     (onevalcomplete [this path results ns-name]
-                       (if-not path
-                         (let [inner-pane (-> project-pane (.lookup "#project") .getItems (.get 1))
-                               result (-> results edn/read-string first)
-                               result (cond
-                                        (vector? result)
-                                        (str "Error: " (first result))
-                                        @client-repl-started?
-                                        result
-                                        :else
-                                        (do
-                                          (reset! client-repl-started? true)
-                                          nil))
-                               result (when (seq result)
-                                        (str result "\n"))
-                               result (str result ns-name "=> ")]
-                           (-> inner-pane
-                               (.lookup "#client_repl_webview")
-                               .getEngine
-                               (.executeScript "window")
-                               (.call "append" (into-array [result]))))
-                         (when-let [editor (get-in @runtime-state [:editor-panes path])]
-                           (-> editor
-                               (.lookup "#webview")
-                               .getEngine
-                               (.executeScript "window")
-                               (.call "setInstaRepl" (into-array [results])))))))]
-        (Platform/runLater
-          (fn []
-            (let [app (.lookup project-pane "#app")]
-              (.setContextMenuEnabled app false)
-              (.setOnStatusChanged (.getEngine app)
-                (reify EventHandler
-                  (handle [this event]
-                    ; set the bridge
-                    (-> (.getEngine app)
-                        (.executeScript "window")
-                        (.setMember "java" bridge)))))
-              (-> app .getEngine (.load url)))))
-        (swap! runtime-state update-in [:projects dir] merge
-          {:url url
-           :server server
-           :app-bridge bridge
-           :editor-file-watcher
-           (or (get-in @runtime-state [:projects dir :editor-file-watcher])
-               (e/create-file-watcher dir runtime-state))
-           :reload-file-watcher
-           (hawk/watch! [{:paths [dir]
-                          :handler (fn [ctx {:keys [kind file]}]
-                                     (when (and (= kind :modify)
-                                                (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"]))
-                                       (compile-clj! project-pane dir (.getCanonicalPath file)))
-                                     (cond
-                                       (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
-                                            (not (u/parent-path? out-dir (.getCanonicalPath file))))
-                                       (compile-cljs! project-pane dir)
-                                       (u/parent-path? out-dir (.getCanonicalPath file))
-                                       (lr/reload-file! dir file))
-                                     ctx)}])})))))
+  ; compile the clj
+  (when (->> (compile-clj! dir)
+             (send-message! project-pane dir))
+    ; compile the cljs
+    (when (->> (compile-cljs! dir)
+               (send-message! project-pane dir))
+      ; run the server's main function and load the webview
+      (when-let [server (run-main! project-pane dir)]
+        (let [port (-> server .getConnectors (aget 0) .getLocalPort)
+              url (str "http://localhost:" port "/"
+                    (-> dir io/file .getName)
+                    "/index.html")
+              out-dir (.getCanonicalPath (io/file dir ".out"))
+              bridge (create-app-bridge project-pane dir)]
+          (Platform/runLater
+            (fn []
+              (let [app (.lookup project-pane "#app")]
+                (.setContextMenuEnabled app false)
+                (.setOnStatusChanged (.getEngine app)
+                  (reify EventHandler
+                    (handle [this event]
+                      (-> (.getEngine app)
+                          (.executeScript "window")
+                          (.setMember "java" bridge)))))
+                (-> app .getEngine (.load url)))))
+          (swap! runtime-state update-in [:projects dir] merge
+            {:url url
+             :server server
+             :app-bridge bridge
+             :editor-file-watcher
+             (or (get-in @runtime-state [:projects dir :editor-file-watcher])
+                 (e/create-file-watcher dir runtime-state))
+             :reload-file-watcher
+             (hawk/watch! [{:paths [dir]
+                            :handler (fn [ctx {:keys [kind file]}]
+                                       (when (and (= kind :modify)
+                                                  (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"]))
+                                         (->> (compile-clj! dir (.getCanonicalPath file))
+                                              (send-message! project-pane dir)))
+                                       (cond
+                                         (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
+                                              (not (u/parent-path? out-dir (.getCanonicalPath file))))
+                                         (->> (compile-cljs! dir)
+                                              (send-message! project-pane dir))
+                                         (u/parent-path? out-dir (.getCanonicalPath file))
+                                         (lr/reload-file! dir file))
+                                       ctx)}])}))))))
+
+(defn start-build-thread! []
+  (let [c (chan (sliding-buffer 1))]
+    (go-loop []
+      (let [dir (<!! c)]
+        (when-let [project-pane (get-in @runtime-state [:projects dir :pane])]
+          (start-server! project-pane dir)))
+      (recur))
+    c))
 
 (defn stop-app! [project-pane dir]
   (stop-server! dir)
@@ -307,7 +322,7 @@
               (.setMember "java"
                 (reify AppBridge
                   (onload [this]
-                    (.start (Thread. #(start-server! project-pane dir))))
+                    (-> @runtime-state :build-chan (put! dir)))
                   (onevalcomplete [this path results ns-name])))))))
     (-> app .getEngine (.load (str "http://localhost:"
                                 (:web-port @runtime-state)

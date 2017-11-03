@@ -67,35 +67,71 @@
                       <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
                     </rowConstraints>
                      <children>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewBasicWebApp" prefHeight="200.0" prefWidth="200.0" text="Basic Web App" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewBasicWebApp" prefHeight="200.0" prefWidth="200.0" text="Basic Web App" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
+                           <graphic>
+                              <Label maxWidth="175.0" text="A barebones app with a beginner-friendly React wrapper called Reagent" textAlignment="CENTER" wrapText="true">
+                                 <font>
+                                    <Font size="12.0" />
+                                 </font></Label>
+                           </graphic>
                         </Button>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewChatApp" prefHeight="200.0" prefWidth="200.0" text="Chat App" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewChatApp" prefHeight="200.0" prefWidth="200.0" text="Chat App" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
+                           <graphic>
+                              <Label maxWidth="175.0" text="Send and receive messages over websockets using Sente" textAlignment="CENTER" wrapText="true">
+                                 <font>
+                                    <Font size="12.0" />
+                                 </font></Label>
+                           </graphic>
                         </Button>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewDatabaseApp" prefHeight="200.0" prefWidth="200.0" text="Database App" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewDatabaseApp" prefHeight="200.0" prefWidth="200.0" text="Database App" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
+                           <graphic>
+                              <Label maxWidth="175.0" text="Store data in an H2 database with clojure.java.jdbc" textAlignment="CENTER" wrapText="true">
+                                 <font>
+                                    <Font size="12.0" />
+                                 </font></Label>
+                           </graphic>
                         </Button>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewBasicGame" prefHeight="200.0" prefWidth="200.0" text="Basic Game" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewBasicGame" prefHeight="200.0" prefWidth="200.0" text="Basic Game" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
+                           <graphic>
+                              <Label maxWidth="175.0" text="A barebones game with play-cljs" textAlignment="CENTER" wrapText="true">
+                                 <font>
+                                    <Font size="12.0" />
+                                 </font></Label>
+                           </graphic>
                         </Button>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewPlatformerGame" prefHeight="200.0" prefWidth="200.0" text="Platformer Game" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewPlatformerGame" prefHeight="200.0" prefWidth="200.0" text="Platformer Game" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
+                           <graphic>
+                              <Label maxWidth="175.0" text="Move a character across a tiled map with play-cljs" textAlignment="CENTER" wrapText="true">
+                                 <font>
+                                    <Font size="12.0" />
+                                 </font></Label>
+                           </graphic>
                         </Button>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewIsomorphicApp" prefHeight="200.0" prefWidth="200.0" text="Isomorphic App" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewIsomorphicApp" prefHeight="200.0" prefWidth="200.0" text="Isomorphic App" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
+                           <graphic>
+                              <Label maxWidth="175.0" text="Render the same views on the server and client with a React wrapper called Rum" textAlignment="CENTER" wrapText="true">
+                                 <font>
+                                    <Font size="12.0" />
+                                 </font></Label>
+                           </graphic>
                         </Button>
                      </children>
                   </GridPane>

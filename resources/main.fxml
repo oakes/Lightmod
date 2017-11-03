@@ -77,7 +77,7 @@
                               <Font size="20.0" />
                            </font>
                         </Button>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" prefHeight="200.0" prefWidth="200.0" text="Database App" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewDatabaseApp" prefHeight="200.0" prefWidth="200.0" text="Database App" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>

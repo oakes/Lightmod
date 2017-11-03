@@ -28,6 +28,7 @@
                   [compojure "1.6.0"]
                   [com.rpl/specter "1.0.4"]
                   [com.taoensso/sente "1.11.0"]
+                  [org.clojure/java.jdbc "0.7.3"]
                   [com.h2database/h2 "1.4.196"]
                   [honeysql "0.9.1"]])
 

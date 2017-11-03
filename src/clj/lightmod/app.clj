@@ -72,7 +72,9 @@
         (throw (Exception. "You must have a client.cljs file.")))
       (lu/check-namespaces! dir false)
       (build dir
-        {:output-to (.getCanonicalPath (io/file dir "main.js"))
+        {:optimizations :none
+         :source-map true
+         :output-to (.getCanonicalPath (io/file dir "main.js"))
          :output-dir (.getCanonicalPath (io/file dir ".out"))
          :main (lu/path->ns dir "client")
          :asset-path ".out"

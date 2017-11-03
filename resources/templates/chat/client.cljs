@@ -20,7 +20,7 @@
       (swap! messages conj (second ?data)))
     nil))
 
-; reagent component that displays the messages
+; reagent component to be rendered
 (defn content []
   [:form {:on-submit (fn [e]
                        (.preventDefault e)

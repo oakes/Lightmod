@@ -83,7 +83,7 @@
                               <Font size="20.0" />
                            </font>
                            <graphic>
-                              <Label maxWidth="175.0" text="Send and receive messages over websockets using Sente" textAlignment="CENTER" wrapText="true">
+                              <Label maxWidth="175.0" text="Send and receive messages over websockets with Sente" textAlignment="CENTER" wrapText="true">
                                  <font>
                                     <Font size="12.0" />
                                  </font></Label>

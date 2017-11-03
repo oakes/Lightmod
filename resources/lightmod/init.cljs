@@ -2,6 +2,7 @@
   (:require [adzerk.boot-reload.client :as client]
             [adzerk.boot-reload.reload :as rl]
             [adzerk.boot-reload.display :as d]
+            [adzerk.boot-reload.connection :refer [ws-conn]]
             [goog.dom :as dom]
             [eval-soup.core :as es]
             [goog.object :as gobj]
@@ -28,6 +29,12 @@
   [state opts]
   (when (rl/has-dom?)
     (d/display state opts)))
+
+(add-watch ws-conn :disconnect
+  (fn [_ _ _ new-val]
+    (when (nil? new-val)
+      (client/handle {:type :visual
+                      :exception {:message "Lost connection to server."}}))))
 
 (set! (.-onload js/window)
   (fn []

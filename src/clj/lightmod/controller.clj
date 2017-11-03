@@ -16,7 +16,7 @@
            [javafx.scene Scene]
            [javafx.scene.input KeyEvent KeyCode])
   (:gen-class
-   :methods [[onNewBasicWebApp [javafx.event.ActionEvent] void]
+   :methods [[onNewBasicApp [javafx.event.ActionEvent] void]
              [onNewChatApp [javafx.event.ActionEvent] void]
              [onNewDatabaseApp [javafx.event.ActionEvent] void]
              [onNewBasicGame [javafx.event.ActionEvent] void]
@@ -75,8 +75,8 @@
               (-> scene (.lookup "#projects") .getTabs
                   (.add (ui/create-tab scene dir a/start-app! a/stop-app!))))))))))
 
-(defn -onNewBasicWebApp [this ^ActionEvent event]
-  (-> event .getSource .getScene (new-project! :basic-web)))
+(defn -onNewBasicApp [this ^ActionEvent event]
+  (-> event .getSource .getScene (new-project! :basic)))
 
 (defn -onNewChatApp [this ^ActionEvent event]
   (-> event .getSource .getScene (new-project! :chat)))

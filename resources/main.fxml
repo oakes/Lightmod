@@ -51,12 +51,12 @@
                         <CheckMenuItem fx:id="auto_save" mnemonicParsing="false" onAction="#onAutoSave" text="Auto Save" />
                      </items>
                   </MenuButton>
-                  <Label alignment="CENTER" layoutX="307.0" layoutY="22.0" text="Welcome to Lightmod" textAlignment="CENTER" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0">
+                  <Label alignment="CENTER" layoutX="150.0" layoutY="53.0" text="A handy tool for your Clojure web adventures" textAlignment="CENTER" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0">
                      <font>
-                        <Font size="25.0" />
+                        <Font size="16.0" />
                      </font>
                   </Label>
-                  <GridPane alignment="CENTER" layoutX="123.0" layoutY="69.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="268.0" prefWidth="405.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="50.0">
+                  <GridPane alignment="CENTER" layoutX="123.0" layoutY="90.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="461.0" prefWidth="672.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="100.0" AnchorPane.rightAnchor="100.0" AnchorPane.topAnchor="90.0">
                     <columnConstraints>
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                       <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -82,7 +82,7 @@
                               <Font size="20.0" />
                            </font>
                         </Button>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" prefHeight="200.0" prefWidth="200.0" text="Basic Game" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewBasicGame" prefHeight="200.0" prefWidth="200.0" text="Basic Game" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
@@ -99,6 +99,11 @@
                         </Button>
                      </children>
                   </GridPane>
+                  <Label alignment="CENTER" layoutX="332.0" layoutY="14.0" text="Welcome to Lightmod" textAlignment="CENTER" AnchorPane.leftAnchor="150.0" AnchorPane.rightAnchor="150.0">
+                     <font>
+                        <Font size="20.0" />
+                     </font>
+                  </Label>
                </children>
             </AnchorPane>
          </content>

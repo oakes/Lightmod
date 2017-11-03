@@ -1,4 +1,4 @@
-(ns {{name}}.server
+(ns [[name]].server
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.string :as str]
@@ -9,7 +9,7 @@
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]
-            [{{name}}.common :as common]
+            [[[name]].common :as common]
             [rum.core :as rum]))
 
 ; stores the people
@@ -35,8 +35,8 @@
           (if (= (.getName file) "index.html")
             {:status 200
              :body (-> (slurp file)
-                       (str/replace "{{content}}" (rum/render-html (common/app people nil)))
-                       (str/replace "{{initial-state}}" (pr-str @people)))}
+                       (str/replace "[[content]]" (rum/render-html (common/app people nil)))
+                       (str/replace "[[initial-state]]" (pr-str @people)))}
             {:status 200
              :body file})))
       ; otherwise, send a 404
@@ -49,6 +49,6 @@
       (wrap-keyword-params)
       (wrap-params)
       (wrap-reload)
-      (wrap-resource "{{dir}}")
+      (wrap-resource "[[dir]]")
       (run-server {:port 0})))
 

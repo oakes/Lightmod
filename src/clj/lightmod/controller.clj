@@ -69,8 +69,8 @@
                 (if (-> file-name u/get-extension #{"clj" "cljs" "cljc"})
                   (spit dest
                     (-> (slurp from)
-                        (str/replace "{{name}}" project-name)
-                        (str/replace "{{dir}}" dir-name)))
+                        (str/replace "[[name]]" project-name)
+                        (str/replace "[[dir]]" dir-name)))
                   (io/copy (io/input-stream from) dest)))
               (-> scene (.lookup "#projects") .getTabs
                   (.add (ui/create-tab scene dir a/start-app! a/stop-app!))))))))))

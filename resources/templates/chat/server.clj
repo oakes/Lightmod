@@ -1,4 +1,4 @@
-(ns {{name}}.server
+(ns [[name]].server
   (:require [clojure.java.io :as io]
             [org.httpkit.server :refer [run-server]]
             [ring.middleware.content-type :refer [wrap-content-type]]
@@ -50,6 +50,6 @@
       (wrap-keyword-params)
       (wrap-params)
       (wrap-reload)
-      (wrap-resource "{{dir}}")
+      (wrap-resource "[[dir]]")
       (run-server {:port 0})))
 

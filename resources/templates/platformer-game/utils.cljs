@@ -1,4 +1,4 @@
-(ns {{name}}.utils
+(ns [[name]].utils
   (:require [play-cljs.core :as p]))
 
 (def ^:const duration 0.15)

@@ -1,4 +1,4 @@
-(ns {{name}}.common
+(ns [[name]].common
   (:require [rum.core :as rum]))
 
 (rum/defc app < rum/reactive [people on-submit]

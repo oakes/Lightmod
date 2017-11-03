@@ -1,7 +1,7 @@
-(ns {{name}}.client
+(ns [[name]].client
   (:require [cljs.reader :refer [read-string]]
             [rum.core :as rum]
-            [{{name}}.common :as common])
+            [[[name]].common :as common])
   (:import goog.net.XhrIo))
 
 ; stores the people

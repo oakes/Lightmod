@@ -1,7 +1,7 @@
-(ns {{name}}.client
+(ns [[name]].client
   (:require [play-cljs.core :as p]
-            [{{name}}.state :as s]
-            [{{name}}.utils :as u]
+            [[[name]].state :as s]
+            [[[name]].utils :as u]
             [goog.events :as events]))
 
 (defonce game (p/create-game js/window.innerWidth js/window.innerHeight))

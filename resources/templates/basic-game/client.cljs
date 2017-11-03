@@ -1,4 +1,4 @@
-(ns {{name}}.client
+(ns [[name]].client
   (:require [play-cljs.core :as p]
             [goog.events :as events]))
 

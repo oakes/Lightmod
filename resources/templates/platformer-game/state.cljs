@@ -1,6 +1,6 @@
-(ns {{name}}.state
+(ns [[name]].state
   (:require [play-cljs.core :as p]
-            [{{name}}.utils :as u]))
+            [[[name]].utils :as u]))
 
 (defn initial-state [game]
   (let [stand-right [:image {:name "player_stand.png"}]

@@ -1,4 +1,4 @@
-(ns {{name}}.client
+(ns [[name]].client
   (:require [cljs.reader :refer [read-string]]
             [reagent.core :as r])
   (:import goog.net.XhrIo))

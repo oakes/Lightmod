@@ -1,4 +1,4 @@
-(ns {{name}}.client
+(ns [[name]].client
   (:require [reagent.core :as r]))
 
 ; stores the click count

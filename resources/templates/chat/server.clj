@@ -8,7 +8,8 @@
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]
             [taoensso.sente :as sente]
-            [taoensso.sente.server-adapters.http-kit :refer [get-sch-adapter]]))
+            [taoensso.sente.server-adapters.http-kit :refer [get-sch-adapter]])
+  (:gen-class))
 
 ; sets up various things for the chat server
 (defonce socket (sente/make-channel-socket! (get-sch-adapter) {}))

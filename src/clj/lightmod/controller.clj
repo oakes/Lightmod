@@ -40,7 +40,23 @@
              [onOpenInFileBrowser [javafx.event.ActionEvent] void]
              [onOpenInWebBrowser [javafx.event.ActionEvent] void]
              [onRestart [javafx.event.ActionEvent] void]
-             [onNewVersion [javafx.event.ActionEvent] void]]))
+             [onNewVersion [javafx.event.ActionEvent] void]
+             [onExport [javafx.event.ActionEvent] void]]))
+
+(defn apply-template! [dir project-type project-name dir-name]
+  (.mkdirs dir)
+  (doseq [file-name (->> (str "templates/" (name project-type) "/files.edn")
+                         io/resource
+                         slurp
+                         edn/read-string)
+          :let [from (io/resource (str "templates/" (name project-type) "/" file-name))
+                dest (io/file dir file-name)]]
+    (if (-> file-name u/get-extension #{"clj" "cljs" "cljc" "boot"})
+      (spit dest
+        (-> (slurp from)
+            (str/replace "[[name]]" project-name)
+            (str/replace "[[dir]]" dir-name)))
+      (io/copy (io/input-stream from) dest))))
 
 ; new project
 
@@ -53,26 +69,14 @@
                  (.initModality Modality/WINDOW_MODAL))]
     (when-let [project-name (some-> dialog .showAndWait (.orElse nil) lu/sanitize-name)]
       (when-let [projects-dir (:projects-dir @runtime-state)]
-        (let [dir-name (str/replace project-name #"-" "_")
+        (let [dir-name (str/replace project-name "-" "_")
               dir (io/file projects-dir dir-name)]
           (if (or (empty? project-name)
                   (-> project-name (.charAt 0) Character/isLetter not)
                   (.exists dir))
             (ui/alert! "The name must be unique and start with a letter.")
             (do
-              (.mkdirs dir)
-              (doseq [file-name (->> (str "templates/" (name project-type) "/files.edn")
-                                     io/resource
-                                     slurp
-                                     edn/read-string)
-                      :let [from (io/resource (str "templates/" (name project-type) "/" file-name))
-                            dest (io/file dir file-name)]]
-                (if (-> file-name u/get-extension #{"clj" "cljs" "cljc"})
-                  (spit dest
-                    (-> (slurp from)
-                        (str/replace "[[name]]" project-name)
-                        (str/replace "[[dir]]" dir-name)))
-                  (io/copy (io/input-stream from) dest)))
+              (apply-template! dir project-type project-name dir-name)
               (-> scene (.lookup "#projects") .getTabs
                   (.add (ui/create-tab scene dir a/start-app! a/stop-app!))))))))))
 
@@ -307,4 +311,59 @@
 
 (defn -onNewVersion [this ^ActionEvent event]
   (-> event .getSource .getScene (ui/open-in-web-browser! "https://sekao.net/lightmod")))
+
+; export
+
+(defn export! [^Scene scene]
+  (when-let [project (lu/get-project-dir)]
+    (when (u/show-warning! scene "Export Project"
+            "This will generate a Boot project for you. See boot-clj.com for details.")
+      (let [project-name (str/replace (.getName project) "_" "-")
+            chooser (doto (FileChooser.)
+                      (.setTitle "Export Project")
+                      (.setInitialFileName project-name))]
+        (when-let [dir (.showSaveDialog chooser (.getWindow scene))]
+          (apply-template! dir :boot project-name (.getName project))
+          (let [res (doto (io/file dir "resources" (.getName project))
+                      .mkdirs)
+                src (doto (io/file dir "src" (.getName project))
+                      .mkdirs)
+                dev-res (doto (io/file dir "dev-resources" (.getName project))
+                          .mkdirs)
+                prod-res (doto (io/file dir "prod-resources" (.getName project))
+                           .mkdirs)
+                copy-file! (fn [f]
+                             (let [rel-path (u/get-relative-path (.getCanonicalPath project) (.getCanonicalPath f))
+                                   dest (io/file
+                                          (if (-> f .getName u/get-extension #{"clj" "cljs" "cljc"})
+                                            src res)
+                                          rel-path)]
+                               (.mkdirs (.getParentFile dest))
+                               (io/copy f dest)))]
+            (spit (io/file dev-res "main.cljs.edn")
+              (with-out-str
+                (clojure.pprint/pprint
+                  {:require  ['nightlight.repl-server
+                              (symbol (str project-name ".client"))]
+                   :init-fns ['cljs.spec.test.alpha/instrument]
+                   :compiler-options {}})))
+            (spit (io/file prod-res "main.cljs.edn")
+              (with-out-str
+                (clojure.pprint/pprint
+                  {:require  [(symbol (str project-name ".client"))]
+                   :init-fns []
+                   :compiler-options {}})))
+            (doseq [f (.listFiles project)
+                    :when (and (-> f .getName (.startsWith ".") not)
+                               (-> f .getName (not= "main.js")))]
+              (cond
+                (.isFile f)
+                (copy-file! f)
+                (.isDirectory f)
+                (doseq [f2 (file-seq f)
+                        :when (.isFile f2)]
+                  (copy-file! f2))))))))))
+
+(defn -onExport [this ^ActionEvent event]
+  (-> event .getSource .getScene export!))
 

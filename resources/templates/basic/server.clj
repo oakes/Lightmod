@@ -6,7 +6,8 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
-            [ring.util.response :refer [not-found]]))
+            [ring.util.response :refer [not-found]])
+  (:gen-class))
 
 ; runs when any request is received
 (defn handler [{:keys [uri] :as request}]

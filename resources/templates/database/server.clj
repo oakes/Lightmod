@@ -9,7 +9,8 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
-            [ring.util.response :refer [not-found]]))
+            [ring.util.response :refer [not-found]])
+  (:gen-class))
 
 ; defines basic parameters for the database
 (def db-spec

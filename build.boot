@@ -4,26 +4,28 @@
   :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
                   [adzerk/boot-reload "0.5.2"]
-                  [org.clojure/clojurescript "1.9.946"]
                   [paren-soup "2.9.0" :scope "test"]
                   [mistakes-were-made "1.7.3" :scope "test"]
                   [cljsjs/codemirror "5.24.0-1" :scope "test"]
-                  [http-kit "2.2.0"]
                   [hawk "0.2.11"]
-                  [org.clojure/core.async "0.3.443"]
-                  [org.clojure/clojure "1.9.0-beta2"]
                   [eval-soup "1.2.3"]
                   [org.clojure/tools.namespace "0.3.0-alpha4"]
-                  [org.clojure/data.json "0.2.6"]
-                  [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
                   [nightcode "2.5.1"
                    :exclusions [leiningen
                                 play-cljs/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]]
+                  ; make sure the rest of this is in the boot template
+                  ; so exported projects have the same deps
+                  [org.clojure/clojure "1.9.0-beta4"]
+                  [org.clojure/clojurescript "1.9.946"]
+                  [org.clojure/core.async "0.3.443"]
+                  [org.clojure/data.json "0.2.6"]
+                  [org.clojure/tools.cli "0.3.5"]
+                  [javax.xml.bind/jaxb-api "2.3.0"]
+                  [http-kit "2.2.0"]
                   [ring "1.6.2"]
                   [reagent "0.8.0-alpha2"]
                   [cljs-react-material-ui "0.2.48"]
-                  [org.clojure/tools.cli "0.3.5"]
                   [rum "0.10.8"]
                   [play-cljs "0.10.2"]
                   [compojure "1.6.0"]

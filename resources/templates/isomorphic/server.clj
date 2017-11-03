@@ -10,7 +10,8 @@
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]
             [[[name]].common :as common]
-            [rum.core :as rum]))
+            [rum.core :as rum])
+  (:gen-class))
 
 ; stores the people
 (defonce people (atom []))

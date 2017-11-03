@@ -1,10 +1,11 @@
 (ns {{name}}.client
   (:require [cljs.reader :refer [read-string]]
-            [reagent.core :as r])
+            [rum.core :as rum]
+            [{{name}}.common :as common])
   (:import goog.net.XhrIo))
 
 ; stores the people
-(def people (r/atom []))
+(defonce people (atom []))
 
 ; gets the people list
 (defn get-people []
@@ -31,33 +32,13 @@
       (pr-str {:first_name (.-value first-name)
                :last_name (.-value last-name)}))))
 
-; reagent component to be rendered
-(defn content []
-  [:form {:on-submit on-submit
-          :style {:margin "10px"}}
-   [:div {:style {:display "flex"}}
-    [:input {:id "first"
-             :type "text"
-             :placeholder "First name"
-             :style {:flex 1}}]
-    [:input {:id "last"
-             :type "text"
-             :placeholder "Last name"
-             :style {:flex 1}}]
-    [:button {:type "submit"}
-     "Submit"]]
-   [:table {:style {:overflow "auto"}}
-    (into [:tbody]
-      (for [person @people]
-        [:tr
-         [:td (:first_name person)]
-         [:td (:last_name person)]]))]])
+; sets the people to the server's initial state
+(reset! people
+  (-> (.querySelector js/document "#initial-state")
+      .-textContent
+      read-string))
 
-; tells reagent to begin rendering
-(r/render-component [content]
+; tells rum to begin rendering
+(rum/mount (common/app people on-submit)
   (.querySelector js/document "#app"))
-
-; runs the initial query
-(set! (.-onload js/window)
-  (get-people))
 

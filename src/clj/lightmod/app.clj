@@ -261,7 +261,6 @@
               url (str "http://localhost:" port "/"
                     (-> dir io/file .getName)
                     "/index.html")
-              out-dir (.getCanonicalPath (io/file dir ".out"))
               bridge (create-app-bridge project-pane dir)]
           (Platform/runLater
             (fn []
@@ -284,18 +283,22 @@
              :reload-file-watcher
              (hawk/watch! [{:paths [dir]
                             :handler (fn [ctx {:keys [kind file]}]
-                                       (when (and (= kind :modify)
-                                                  (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"]))
-                                         (->> (compile-clj! dir (.getCanonicalPath file))
-                                              (send-message! project-pane dir)))
-                                       (cond
-                                         (and (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"])
-                                              (not (u/parent-path? out-dir (.getCanonicalPath file))))
-                                         (->> (compile-cljs! dir)
-                                              (send-message! project-pane dir))
-                                         (u/parent-path? out-dir (.getCanonicalPath file))
-                                         (lr/reload-file! dir file))
-                                       ctx)}])}))))))
+                                       (let [in-out-dir? (-> (io/file dir ".out")
+                                                             .getCanonicalPath
+                                                             (u/parent-path? (.getCanonicalPath file)))]
+                                         (when (and (not in-out-dir?)
+                                                    (= kind :modify)
+                                                    (some #(-> file .getName (.endsWith %)) [".clj" ".cljc"]))
+                                           (->> (compile-clj! dir (.getCanonicalPath file))
+                                                (send-message! project-pane dir)))
+                                         (cond
+                                           (and (not in-out-dir?)
+                                                (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"]))
+                                           (->> (compile-cljs! dir)
+                                                (send-message! project-pane dir))
+                                           in-out-dir?
+                                           (lr/reload-file! dir file))
+                                         ctx))}])}))))))
 
 (defn start-build-thread! []
   (let [c (chan (sliding-buffer 1))]

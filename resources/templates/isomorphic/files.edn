@@ -1,0 +1,4 @@
+["client.cljs"
+ "common.cljc"
+ "index.html"
+ "server.clj"]

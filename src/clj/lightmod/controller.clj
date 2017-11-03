@@ -21,6 +21,7 @@
              [onNewDatabaseApp [javafx.event.ActionEvent] void]
              [onNewBasicGame [javafx.event.ActionEvent] void]
              [onNewPlatformerGame [javafx.event.ActionEvent] void]
+             [onNewIsomorphicApp [javafx.event.ActionEvent] void]
              [onRename [javafx.event.ActionEvent] void]
              [onRemove [javafx.event.ActionEvent] void]
              [onUp [javafx.event.ActionEvent] void]
@@ -88,6 +89,9 @@
 
 (defn -onNewPlatformerGame [this ^ActionEvent event]
   (-> event .getSource .getScene (new-project! :platformer-game)))
+
+(defn -onNewIsomorphicApp [this ^ActionEvent event]
+  (-> event .getSource .getScene (new-project! :isomorphic)))
 
 ; remove
 

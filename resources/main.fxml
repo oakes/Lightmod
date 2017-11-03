@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.CustomMenuItem?>
+<?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.Tab?>
@@ -140,6 +141,7 @@
                         <Font size="20.0" />
                      </font>
                   </Label>
+                  <Hyperlink fx:id="new_version" layoutX="14.0" layoutY="15.0" onAction="#onNewVersion" text="New Version of Lightmod!" visible="false" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
                </children>
             </AnchorPane>
          </content>

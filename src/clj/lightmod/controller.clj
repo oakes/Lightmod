@@ -39,7 +39,8 @@
              [onNewFile [javafx.event.ActionEvent] void]
              [onOpenInFileBrowser [javafx.event.ActionEvent] void]
              [onOpenInWebBrowser [javafx.event.ActionEvent] void]
-             [onRestart [javafx.event.ActionEvent] void]]))
+             [onRestart [javafx.event.ActionEvent] void]
+             [onNewVersion [javafx.event.ActionEvent] void]]))
 
 ; new project
 
@@ -301,4 +302,9 @@
 
 (defn -onRestart [this ^ActionEvent event]
   (-> event .getSource .getScene restart!))
+
+; new version
+
+(defn -onNewVersion [this ^ActionEvent event]
+  (-> event .getSource .getScene (ui/open-in-web-browser! "https://sekao.net/lightmod")))
 

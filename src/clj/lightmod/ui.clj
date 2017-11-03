@@ -16,20 +16,25 @@
            [javafx.scene.control Button ContentDisplay Label]
            [nightcode.utils Bridge]))
 
-(defn open-in-file-browser! [^Scene scene]
-  (when-let [path (:selection @pref-state)]
-    (javax.swing.SwingUtilities/invokeLater
-      (fn []
-        (when (Desktop/isDesktopSupported)
-          (.open (Desktop/getDesktop) (io/file path)))))))
+(defn open-in-file-browser!
+  ([^Scene scene]
+   (open-in-file-browser! scene (:selection @pref-state)))
+  ([^Scene scene path]
+   (javax.swing.SwingUtilities/invokeLater
+     (fn []
+       (when (Desktop/isDesktopSupported)
+         (.open (Desktop/getDesktop) (io/file path)))))))
 
-(defn open-in-web-browser! [^Scene scene]
-  (when-let [project (lu/get-project-dir)]
-    (when-let [url (get-in @runtime-state [:projects (.getCanonicalPath project) :url])]
-      (javax.swing.SwingUtilities/invokeLater
-        (fn []
-          (when (Desktop/isDesktopSupported)
-            (.browse (Desktop/getDesktop) (java.net.URI. url))))))))
+(defn open-in-web-browser!
+  ([^Scene scene]
+   (when-let [project (lu/get-project-dir)]
+     (when-let [url (get-in @runtime-state [:projects (.getCanonicalPath project) :url])]
+       (open-in-web-browser! scene url))))
+  ([^Scene scene url]
+   (javax.swing.SwingUtilities/invokeLater
+     (fn []
+       (when (Desktop/isDesktopSupported)
+         (.browse (Desktop/getDesktop) (java.net.URI. url)))))))
 
 (defn alert! [message]
   (doto (Alert. Alert$AlertType/INFORMATION)
@@ -68,8 +73,7 @@
         (reify EventHandler
           (handle [this event]
             (alert! "To delete this project, you'll need to delete its folder.")
-            (swap! pref-state assoc :selection dir)
-            (open-in-file-browser! scene)
+            (open-in-file-browser! scene dir)
             (.consume event)))))))
 
 (defn dir-pane [f]

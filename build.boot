@@ -14,6 +14,7 @@
                   [org.clojure/clojure "1.9.0-beta2"]
                   [eval-soup "1.2.3"]
                   [org.clojure/tools.namespace "0.3.0-alpha4"]
+                  [org.clojure/data.json "0.2.6"]
                   [javax.xml.bind/jaxb-api "2.3.0"] ; necessary for Java 9 compatibility
                   [nightcode "2.5.1"
                    :exclusions [leiningen
@@ -30,7 +31,11 @@
                   [com.taoensso/sente "1.11.0"]
                   [org.clojure/java.jdbc "0.7.3"]
                   [com.h2database/h2 "1.4.196"]
-                  [honeysql "0.9.1"]])
+                  [honeysql "0.9.1"]]
+  :repositories (conj (get-env :repositories)
+                  ["clojars" {:url "https://clojars.org/repo/"
+                              :username (System/getenv "CLOJARS_USER")
+                              :password (System/getenv "CLOJARS_PASS")}]))
 
 (require
   '[adzerk.boot-cljs :refer [cljs]]
@@ -39,7 +44,11 @@
 (task-options!
   sift {:include #{#"\.jar$"}}
   pom {:project 'lightmod
-       :version "1.0.0"}
+       :version "1.0.0"
+       :description "An all-in-one tool for full stack Clojure"
+       :url "https://github.com/oakes/Lightmod"
+       :license {"Public Domain" "http://unlicense.org/UNLICENSE"}}
+  push {:repo "clojars"}
   aot {:namespace '#{lightmod.core}}
   jar {:main 'lightmod.core
        :manifest {"Description" "An all-in-one tool for full stack Clojure"
@@ -74,4 +83,12 @@
       (.renameTo (io/file "target/public/paren-soup.js") (io/file "resources/public/paren-soup.js"))
       (.renameTo (io/file "target/public/codemirror.js") (io/file "resources/public/codemirror.js"))
       (.renameTo (io/file "target/public/loading.js") (io/file "resources/public/loading.js")))))
+
+(deftask local []
+  (set-env! :resource-paths #{"src/clj" "src/cljs"})
+  (comp (pom) (jar) (install)))
+
+(deftask deploy []
+  (set-env! :resource-paths #{"src/clj" "src/cljs"})
+  (comp (pom) (jar) (push)))
 

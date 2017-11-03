@@ -11,8 +11,9 @@
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.util.response :refer [redirect not-found]]
-            [ring.middleware.reload])
-  (:import [javafx.application Application]
+            [ring.middleware.reload]
+            [clojure.data.json :as json])
+  (:import [javafx.application Application Platform]
            [javafx.fxml FXMLLoader]
            [javafx.stage Stage]
            [javafx.scene Scene]
@@ -20,6 +21,8 @@
            [javafx.event EventHandler]
            [javafx.beans.value ChangeListener])
   (:gen-class :extends javafx.application.Application))
+
+(def version "1.0.0")
 
 (def actions {:#up c/up!
               :#save c/save!
@@ -61,7 +64,7 @@
                        :text-size 16
                        :auto-save? true})
     (doto stage
-      (.setTitle "Lightmod 1.0.0")
+      (.setTitle (str "Lightmod " version))
       (.setScene scene)
       (.show))
     (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
@@ -108,7 +111,21 @@
             (when-let [selection (:selection @pref-state)]
               (doto pref-state
                 (swap! assoc :selection nil)
-                (swap! assoc :selection selection)))))))))
+                (swap! assoc :selection selection)))))))
+    ; check for updates
+    (when-not (:dev? @runtime-state)
+      (future
+        (try
+          (when (some-> "https://clojars.org/api/artifacts/lightmod"
+                        slurp
+                        json/read-str
+                        (get "latest_release")
+                        (not= version))
+            (Platform/runLater
+              (fn []
+                (-> (.lookup scene "#new_version")
+                    (.setVisible true)))))
+          (catch Exception _))))))
 
 (defn handler [request]
   (case (:uri request)
@@ -131,5 +148,7 @@
   (swap! runtime-state assoc :web-port (start-web-server!))
   (Application/launch lightmod.core (into-array String args)))
 
-(defn dev-main [] (-main))
+(defn dev-main []
+  (swap! runtime-state assoc :dev? true)
+  (-main))
 

@@ -14,7 +14,7 @@
       (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
         (when (.isFile file)
           {:status 200
-           :body (slurp file)}))
+           :body file}))
       ; otherwise, send a 404
       (not-found "Page not found")))
 

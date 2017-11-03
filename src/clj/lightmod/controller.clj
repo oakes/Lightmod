@@ -20,6 +20,7 @@
              [onNewChatApp [javafx.event.ActionEvent] void]
              [onNewDatabaseApp [javafx.event.ActionEvent] void]
              [onNewBasicGame [javafx.event.ActionEvent] void]
+             [onNewPlatformerGame [javafx.event.ActionEvent] void]
              [onRename [javafx.event.ActionEvent] void]
              [onRemove [javafx.event.ActionEvent] void]
              [onUp [javafx.event.ActionEvent] void]
@@ -57,18 +58,19 @@
                   (.exists dir))
             (ui/alert! "The name must be unique and start with a letter.")
             (do
-              (.mkdir dir)
+              (.mkdirs dir)
               (doseq [file-name (->> (str "templates/" (name project-type) "/files.edn")
                                      io/resource
                                      slurp
-                                     edn/read-string)]
-                (let [content (slurp (io/resource (str "templates/" (name project-type) "/" file-name)))
-                      content (if (-> file-name u/get-extension #{"clj" "cljs" "cljc"})
-                                (-> content
-                                    (str/replace "{{name}}" project-name)
-                                    (str/replace "{{dir}}" dir-name))
-                                content)]
-                  (spit (io/file dir file-name) content)))
+                                     edn/read-string)
+                      :let [from (io/resource (str "templates/" (name project-type) "/" file-name))
+                            dest (io/file dir file-name)]]
+                (if (-> file-name u/get-extension #{"clj" "cljs" "cljc"})
+                  (spit dest
+                    (-> (slurp from)
+                        (str/replace "{{name}}" project-name)
+                        (str/replace "{{dir}}" dir-name)))
+                  (io/copy (io/input-stream from) dest)))
               (-> scene (.lookup "#projects") .getTabs
                   (.add (ui/create-tab scene dir a/start-app! a/stop-app!))))))))))
 
@@ -83,6 +85,9 @@
 
 (defn -onNewBasicGame [this ^ActionEvent event]
   (-> event .getSource .getScene (new-project! :basic-game)))
+
+(defn -onNewPlatformerGame [this ^ActionEvent event]
+  (-> event .getSource .getScene (new-project! :platformer-game)))
 
 ; remove
 

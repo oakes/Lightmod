@@ -72,7 +72,7 @@
                               <Font size="20.0" />
                            </font>
                         </Button>
-                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" prefHeight="200.0" prefWidth="200.0" text="Chat App" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
+                        <Button contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewChatApp" prefHeight="200.0" prefWidth="200.0" text="Chat App" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>

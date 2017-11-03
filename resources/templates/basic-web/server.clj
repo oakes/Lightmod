@@ -8,6 +8,7 @@
             [ring.middleware.resource :refer [wrap-resource]]
             [ring.util.response :refer [not-found]]))
 
+; runs when any request is received
 (defn handler [{:keys [uri] :as request}]
   (or ; if the request is a static file
       (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
@@ -17,6 +18,7 @@
       ; otherwise, send a 404
       (not-found "Page not found")))
 
+; runs when the server starts
 (defn -main [& args]
   (-> #'handler
       (wrap-content-type)

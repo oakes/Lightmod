@@ -17,6 +17,7 @@
            [javafx.scene.input KeyEvent KeyCode])
   (:gen-class
    :methods [[onNewBasicWebApp [javafx.event.ActionEvent] void]
+             [onNewChatApp [javafx.event.ActionEvent] void]
              [onRename [javafx.event.ActionEvent] void]
              [onRemove [javafx.event.ActionEvent] void]
              [onUp [javafx.event.ActionEvent] void]
@@ -71,6 +72,9 @@
 
 (defn -onNewBasicWebApp [this ^ActionEvent event]
   (-> event .getSource .getScene (new-project! :basic-web)))
+
+(defn -onNewChatApp [this ^ActionEvent event]
+  (-> event .getSource .getScene (new-project! :chat)))
 
 ; remove
 

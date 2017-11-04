@@ -24,12 +24,14 @@
     (lr/send-message! dir msg)
     (Platform/runLater
       (fn []
-        (when-let [obj (some-> project-pane
-                               (.lookup "#app")
-                               .getEngine
-                               (.executeScript "lightmod.loading"))]
-          (when (instance? netscape.javascript.JSObject obj)
-            (.call obj "show_error" (into-array [(pr-str msg)]))))))
+        (try
+          (when-let [obj (some-> project-pane
+                                 (.lookup "#app")
+                                 .getEngine
+                                 (.executeScript "lightmod.loading"))]
+            (when (instance? netscape.javascript.JSObject obj)
+              (.call obj "show_error" (into-array [(pr-str msg)]))))
+          (catch Exception _))))
     (and (not (:exception msg))
          (empty? (:warnings msg)))))
 

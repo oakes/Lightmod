@@ -41,7 +41,7 @@
         (case request-method
           :get (ring-ajax-get-or-ws-handshake request)
           :post (ring-ajax-post request)))
-      ; if the request is an existing file
+      ; if the request is a static file
       (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
         (when (.isFile file)
           {:status 200

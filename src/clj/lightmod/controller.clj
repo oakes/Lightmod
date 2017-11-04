@@ -61,7 +61,7 @@
 ; new project
 
 (defn new-project! [^Scene scene project-type]
-  (let [dialog (doto (TextInputDialog.)
+  (let [dialog (doto (TextInputDialog. (name project-type))
                  (.setTitle "New Project")
                  (.setHeaderText "Enter a name for your project.")
                  (.setGraphic nil)

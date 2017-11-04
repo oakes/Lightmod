@@ -15,7 +15,7 @@
               (when (pos? read)
                 (let [s (u/remove-returns (String. ca 0 read))]
                   (callback s)
-                  (Thread/sleep 100) ; prevent thread from being flooded
+                  (Thread/sleep 50) ; prevent thread from being flooded
                   (recur))))))))))
 
 (defn create-pipes []

@@ -5,7 +5,7 @@
            [java.io PipedWriter PipedReader PrintWriter]))
 
 (defn pipe-into-console! [in-pipe callback]
-  (let [ca (char-array 2048)]
+  (let [ca (char-array 4096)]
     (.start
       (Thread.
         (fn []

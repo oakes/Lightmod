@@ -10,6 +10,7 @@
                   [hawk "0.2.11"]
                   [eval-soup "1.2.3"]
                   [org.clojure/tools.namespace "0.3.0-alpha4"]
+                  [org.clojure/tools.reader "1.1.0"]
                   [nightcode "2.5.1"
                    :exclusions [leiningen
                                 play-cljs/lein-template

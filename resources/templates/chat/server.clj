@@ -28,6 +28,12 @@
       (chsk-send! uid [id ?data]))
     nil))
 
+; starts the chat server
+(defonce router (atom nil))
+(when-let [stop-router @router]
+  (stop-router))
+(reset! router (sente/start-server-chsk-router! ch-chsk event-msg-handler))
+
 ; runs when any request is received
 (defn handler [{:keys [uri request-method] :as request}]
   (or ; if the request is to the chat server
@@ -45,7 +51,6 @@
 
 ; runs when the server starts
 (defn -main [& args]
-  (sente/start-server-chsk-router! ch-chsk event-msg-handler)
   (-> #'handler
       (wrap-content-type)
       (wrap-keyword-params)

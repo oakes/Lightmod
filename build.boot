@@ -22,7 +22,6 @@
                   [org.clojure/core.async "0.3.443"]
                   [org.clojure/data.json "0.2.6"]
                   [org.clojure/tools.cli "0.3.5"]
-                  [javax.xml.bind/jaxb-api "2.3.0"]
                   [http-kit "2.2.0"]
                   [ring "1.6.2"]
                   [reagent "0.8.0-alpha2"]
@@ -75,7 +74,13 @@
     #"(?i)^META-INF\\[^\\]*\.(MF|SF|RSA|DSA)$"
     #"(?i)^META-INF\\INDEX.LIST$"))
 
-(deftask build []
+(deftask build [_ package bool "Build for javapackager."]
+  (set-env! :dependencies
+    (conj (get-env :dependencies)
+      ; if building for javapackager, don't include jaxb in the final jar
+      (if package
+        '[javax.xml.bind/jaxb-api "2.3.0" :scope "test"]
+        '[javax.xml.bind/jaxb-api "2.3.0"])))
   (comp (aot) (pom) (uber :exclude jar-exclusions) (jar) (sift) (target)))
 
 (deftask build-cljs []

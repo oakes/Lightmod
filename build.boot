@@ -58,6 +58,9 @@
        :file "project.jar"})
 
 (deftask run []
+  (set-env! :dependencies
+    (conj (get-env :dependencies)
+      '[javax.xml.bind/jaxb-api "2.3.0" :scope "test"]))
   (comp
     (aot)
     (with-pass-thru _
@@ -84,6 +87,9 @@
   (comp (aot) (pom) (uber :exclude jar-exclusions) (jar) (sift) (target)))
 
 (deftask build-cljs []
+  (set-env! :dependencies
+    (conj (get-env :dependencies)
+      '[javax.xml.bind/jaxb-api "2.3.0" :scope "test"]))
   (comp
     (cljs :optimizations :advanced)
     (target)

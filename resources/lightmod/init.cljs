@@ -36,7 +36,7 @@
       (client/handle {:type :visual
                       :exception {:message "Lost connection to server."}}))))
 
-(set! (.-onload js/window)
+(js/window.addEventListener "load"
   (fn []
     (.send XhrIo
       ".out/lightmod.edn"

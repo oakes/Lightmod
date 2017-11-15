@@ -298,7 +298,8 @@
                                                 (some #(-> file .getName (.endsWith %)) [".cljs" ".cljc"]))
                                            (->> (compile-cljs! dir)
                                                 (send-message! project-pane dir))
-                                           in-out-dir?
+                                           (or in-out-dir?
+                                               (some #(-> file .getName (.endsWith %)) [".css" ".html"]))
                                            (lr/reload-file! dir file))
                                          ctx))}])}))))))
 

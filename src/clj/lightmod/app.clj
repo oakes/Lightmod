@@ -134,11 +134,13 @@
       nil)))
 
 (defn append! [webview s]
-  (when (seq s)
-    (-> webview
-        .getEngine
-        (.executeScript "window")
-        (.call "append" (into-array [s])))))
+  (try
+    (when (seq s)
+      (-> webview
+          .getEngine
+          (.executeScript "window")
+          (.call "append" (into-array [s]))))
+    (catch Exception _)))
 
 (defn redirect-stdio! [logs-atom]
   (let [stdout-pipes (lrepl/create-pipes)
@@ -156,7 +158,7 @@
       (fn [s]
         (binding [*out* (java.io.OutputStreamWriter. System/out)]
           (println s))
-        (swap! logs-atom str (str s \newline))))
+        (swap! logs-atom str s \newline)))
     {:stdout stdout-pipes
      :stderr stderr-pipes}))
 
@@ -165,22 +167,19 @@
     (fn [project]
       (let [logs (or (:server-logs-atom project)
                      (atom ""))
-            pipes (redirect-stdio! logs)]
-        (assoc project
-          :server-logs-atom logs
-          :server-logs-pipes pipes))))
-  (swap! runtime-state update-in [:projects dir]
-    (fn [{:keys [server-logs-atom] :as project}]
-      (let [webview (.lookup inner-pane "#server_logs_webview")
+            pipes (redirect-stdio! logs)
+            webview (.lookup inner-pane "#server_logs_webview")
             bridge (ui/init-console! webview false
                      (fn []
-                       (append! webview @server-logs-atom)
-                       (add-watch server-logs-atom :append
+                       (append! webview @logs)
+                       (add-watch logs :append
                          (fn [_ _ old-log new-log]
                            (Platform/runLater
                              #(append! webview (subs new-log (count old-log)))))))
                      (fn []))]
         (assoc project
+          :server-logs-atom logs
+          :server-logs-pipes pipes
           :server-logs-bridge bridge)))))
 
 (defn init-reload-server! [dir]

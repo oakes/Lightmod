@@ -200,7 +200,12 @@
     (when server (server))
     (when reload-stop-fn (reload-stop-fn))
     (when reload-file-watcher (hawk/stop! reload-file-watcher))
-    (when server-logs-atom (remove-watch server-logs-atom :append))
+    (when server-logs-atom
+      (remove-watch server-logs-atom :append)
+      (let [log-size (count @server-logs-atom)
+            log-limit 10000]
+        (when (> log-size log-limit)
+          (swap! server-logs-atom subs (- log-size log-limit)))))
     (when-let [{:keys [stdout stderr]} server-logs-pipes]
       (doto stdout
         (-> :in-pipe .close)

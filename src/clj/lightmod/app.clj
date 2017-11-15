@@ -197,7 +197,9 @@
   (let [{:keys [server reload-stop-fn reload-file-watcher
                 server-logs-atom server-logs-pipes]}
         (get-in @runtime-state [:projects dir])]
-    (when server (server))
+    (when server
+      (try (server)
+        (catch Exception _)))
     (when reload-stop-fn (reload-stop-fn))
     (when reload-file-watcher (hawk/stop! reload-file-watcher))
     (when server-logs-atom

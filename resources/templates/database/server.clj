@@ -2,7 +2,6 @@
   (:require [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.java.jdbc :as jdbc]
-            [honeysql.core :as hsql]
             [org.httpkit.server :refer [run-server]]
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.middleware.keyword-params :refer [wrap-keyword-params]]
@@ -31,9 +30,7 @@
 ; selects all people from the table
 (defn get-people []
   (jdbc/with-db-connection [db-conn db-spec]
-    (jdbc/query db-conn
-      (hsql/format {:select [:*]
-                    :from [:people]}))))
+    (jdbc/query db-conn "SELECT * FROM people")))
 
 ; adds an entry to the people table
 (defn insert-person [person]

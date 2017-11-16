@@ -22,8 +22,6 @@
              [onNewBasicGame [javafx.event.ActionEvent] void]
              [onNewPlatformerGame [javafx.event.ActionEvent] void]
              [onNewIsomorphicApp [javafx.event.ActionEvent] void]
-             [onRename [javafx.event.ActionEvent] void]
-             [onRemove [javafx.event.ActionEvent] void]
              [onUp [javafx.event.ActionEvent] void]
              [onSave [javafx.event.ActionEvent] void]
              [onUndo [javafx.event.ActionEvent] void]
@@ -111,25 +109,6 @@
              (str/join \newline)
              (str "The below files are not saved. Proceed?" \newline \newline)
              (u/show-warning! scene "Unsaved Files")))))
-
-(defn remove! [^Scene scene]
-  (let [{:keys [project-set selection]} @pref-state
-        message (if (contains? project-set selection)
-                  "Remove this project? It WILL NOT be deleted from the disk."
-                  "Remove this file? It WILL be deleted from the disk.")
-        dialog (doto (Alert. Alert$AlertType/CONFIRMATION)
-                 (.setTitle "Remove")
-                 (.setHeaderText message)
-                 (.setGraphic nil)
-                 (.initOwner (.getWindow scene))
-                 (.initModality Modality/WINDOW_MODAL))
-        project-tree (.lookup scene "#project_tree")]
-    (when (and (-> dialog .showAndWait (.orElse nil) (= ButtonType/OK))
-               (should-remove? scene selection))
-      (e/remove-editors! selection runtime-state))))
-
-(defn -onRemove [this ^ActionEvent event]
-  (-> event .getSource .getScene remove!))
 
 ; up
 

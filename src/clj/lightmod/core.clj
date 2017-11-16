@@ -22,7 +22,7 @@
            [javafx.beans.value ChangeListener])
   (:gen-class :extends javafx.application.Application))
 
-(def version "1.0.3")
+(def version "1.0.4")
 
 (def actions {:#up c/up!
               :#save c/save!

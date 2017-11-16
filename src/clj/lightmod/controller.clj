@@ -145,8 +145,9 @@
 
 (defn save! [^Scene scene]
   (when-let [path (:selection @pref-state)]
-    (when-let [engine (some-> scene (.lookup "#webview") .getEngine)]
-      (e/save-file! path engine))))
+    (when-let [pane (get-in @runtime-state [:editor-panes path])]
+      (when-let [engine (some-> pane (.lookup "#webview") .getEngine)]
+        (e/save-file! path engine)))))
 
 (defn -onSave [this ^ActionEvent event]
   (-> event .getSource .getScene save!))
@@ -154,11 +155,12 @@
 ; undo
 
 (defn undo! [^Scene scene]
-  (let [editor (.lookup scene "#editor")
-        webview (.lookup scene "#webview")
-        engine (.getEngine webview)]
-    (.executeScript engine "undo()")
-    (e/update-editor-buttons! editor engine)))
+  (when-let [path (:selection @pref-state)]
+    (when-let [pane (get-in @runtime-state [:editor-panes path])]
+      (let [webview (.lookup pane "#webview")
+            engine (.getEngine webview)]
+        (.executeScript engine "undo()")
+        (e/update-editor-buttons! pane engine)))))
 
 (defn -onUndo [this ^ActionEvent event]
   (-> event .getSource .getScene undo!))
@@ -166,11 +168,12 @@
 ; redo
 
 (defn redo! [^Scene scene]
-  (let [editor (.lookup scene "#editor")
-        webview (.lookup scene "#webview")
-        engine (.getEngine webview)]
-    (.executeScript engine "redo()")
-    (e/update-editor-buttons! editor engine)))
+  (when-let [path (:selection @pref-state)]
+    (when-let [pane (get-in @runtime-state [:editor-panes path])]
+      (let [webview (.lookup pane "#webview")
+            engine (.getEngine webview)]
+        (.executeScript engine "redo()")
+        (e/update-editor-buttons! pane engine)))))
 
 (defn -onRedo [this ^ActionEvent event]
   (-> event .getSource .getScene redo!))
@@ -178,11 +181,13 @@
 ; instaREPL
 
 (defn toggle-instarepl! [^Scene scene & [from-button?]]
-  (let [webview (.lookup scene "#webview")
-        instarepl (.lookup scene "#instarepl")]
-    (when-not from-button?
-      (.setSelected instarepl (not (.isSelected instarepl))))
-    (e/toggle-instarepl! (.getEngine webview) (.isSelected instarepl))))
+  (when-let [path (:selection @pref-state)]
+    (when-let [pane (get-in @runtime-state [:editor-panes path])]
+      (let [webview (.lookup pane "#webview")
+            instarepl (.lookup pane "#instarepl")]
+        (when-not from-button?
+          (.setSelected instarepl (not (.isSelected instarepl))))
+        (e/toggle-instarepl! (.getEngine webview) (.isSelected instarepl))))))
 
 (defn -onInstaRepl [this ^ActionEvent event]
   (-> event .getSource .getScene (toggle-instarepl! true)))
@@ -190,19 +195,22 @@
 ; find
 
 (defn focus-on-find! [^Scene scene]
-  (when-let [find (.lookup scene "#find")]
-    (doto find .requestFocus .selectAll)))
+  (when-let [path (:selection @pref-state)]
+    (when-let [pane (get-in @runtime-state [:editor-panes path])]
+      (when-let [find (.lookup pane "#find")]
+        (doto find .requestFocus .selectAll)))))
 
 (defn find! [^Scene scene ^KeyEvent event]
   (when (= KeyCode/ENTER (.getCode event))
     (when-let [path (:selection @pref-state)]
-      (let [webview (.lookup scene "#webview")
-            engine (.getEngine webview)
-            find (.lookup scene "#find")
-            find-text (.getText find)]
-        (-> engine
-            (.executeScript "window")
-            (.call "find" (into-array Object [find-text true (.isShiftDown event)])))))))
+      (when-let [pane (get-in @runtime-state [:editor-panes path])]
+        (let [webview (.lookup pane "#webview")
+              engine (.getEngine webview)
+              find (.lookup pane "#find")
+              find-text (.getText find)]
+          (-> engine
+              (.executeScript "window")
+              (.call "find" (into-array Object [find-text true (.isShiftDown event)]))))))))
 
 (defn -onFind [this ^KeyEvent event]
   (-> event .getSource .getScene (find! event)))

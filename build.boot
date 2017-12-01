@@ -4,7 +4,7 @@
   :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
                   [adzerk/boot-reload "0.5.2"]
-                  [paren-soup "2.9.2" :scope "test"]
+                  [paren-soup "2.9.3" :scope "test"]
                   [mistakes-were-made "1.7.3" :scope "test"]
                   [cljsjs/codemirror "5.24.0-1" :scope "test"]
                   [hawk "0.2.11"]

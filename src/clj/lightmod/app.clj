@@ -15,9 +15,12 @@
             [lightmod.utils :as lu]
             [eval-soup.core :refer [with-security]]
             [eval-soup.clojail :refer [thunk-timeout]]
-            [clojure.core.async :refer [chan sliding-buffer put! <!! go-loop]])
+            [clojure.core.async :refer [chan sliding-buffer put! <!! go-loop]]
+            [cljs.env :as env])
   (:import [javafx.application Platform]
            [javafx.event EventHandler]))
+
+(defonce *env (env/default-compiler-env))
 
 (defn send-message! [project-pane dir msg]
   (when (lu/current-project? dir)
@@ -54,64 +57,63 @@
        {:type :visual-clj
         :exception {:message (.getMessage e)}}))))
 
+(defn get-cljs-options [dir]
+  {:optimizations :none
+   :source-map true
+   :output-to (.getCanonicalPath (io/file dir "main.js"))
+   :output-dir (.getCanonicalPath (io/file dir ".out"))
+   :main (lu/path->ns dir "client")
+   :asset-path ".out"
+   :preloads '[lightmod.init]
+   :foreign-libs (mapv #(update % :file lu/copy-from-resources! dir)
+                   [{:file "js/p5.js"
+                     :provides ["p5.core"]}
+                    {:file "js/p5.tiledmap.js"
+                     :provides ["p5.tiled-map"]
+                     :requires ["p5.core"]}
+                    {:file "cljsjs/react/development/react.inc.js"
+                     :provides ["react" "cljsjs.react"]
+                     :file-min ".out/cljsjs/react/production/react.min.inc.js"
+                     :global-exports '{react React}}
+                    {:file "cljsjs/create-react-class/development/create-react-class.inc.js"
+                     :provides ["cljsjs.create-react-class" "create-react-class"]
+                     :requires ["react"]
+                     :file-min "cljsjs/create-react-class/production/create-react-class.min.inc.js"
+                     :global-exports '{create-react-class createReactClass}}
+                    {:file "cljsjs/react-dom/development/react-dom.inc.js"
+                     :provides ["react-dom" "cljsjs.react.dom"]
+                     :requires ["react"]
+                     :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
+                     :global-exports '{react-dom ReactDOM}}])
+   :externs (mapv #(lu/copy-from-resources! % dir)
+              ["cljsjs/react/common/react.ext.js"
+               "cljsjs/create-react-class/common/create-react-class.ext.js"
+               "cljsjs/react-dom/common/react-dom.ext.js"])})
+
 (defn compile-cljs! [dir]
-  (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))
-        warnings (atom [])
+  (let [*warnings (atom [])
         on-warning (fn [warning-type env extra]
                      (when-not (#{:infer-warning} warning-type)
-                       (swap! warnings conj
+                       (swap! *warnings conj
                          (merge {:message (ana/error-message warning-type extra)
                                  :ns (-> env :ns :name)
                                  :type warning-type
                                  :file (str ana/*cljs-file*)}
-                           (select-keys env [:line :column])))))]
-    (try
-      (when (.exists cljs-dir)
-        (u/delete-children-recursively! cljs-dir))
-      (catch Exception _))
+                           (select-keys env [:line :column])))))
+        opts (assoc (get-cljs-options dir)
+               :warning-handlers [on-warning])]
     (try
       (when-not (.exists (io/file dir "client.cljs"))
         (throw (Exception. "You must have a client.cljs file.")))
       (lu/check-namespaces! dir false)
-      (build dir
-        {:optimizations :none
-         :source-map true
-         :output-to (.getCanonicalPath (io/file dir "main.js"))
-         :output-dir (.getCanonicalPath (io/file dir ".out"))
-         :main (lu/path->ns dir "client")
-         :asset-path ".out"
-         :preloads '[lightmod.init]
-         :foreign-libs (mapv #(update % :file lu/copy-from-resources! dir)
-                         [{:file "js/p5.js"
-                           :provides ["p5.core"]}
-                          {:file "js/p5.tiledmap.js"
-                           :provides ["p5.tiled-map"]
-                           :requires ["p5.core"]}
-                          {:file "cljsjs/react/development/react.inc.js"
-                           :provides ["react" "cljsjs.react"]
-                           :file-min ".out/cljsjs/react/production/react.min.inc.js"
-                           :global-exports '{react React}}
-                          {:file "cljsjs/create-react-class/development/create-react-class.inc.js"
-                           :provides ["cljsjs.create-react-class" "create-react-class"]
-                           :requires ["react"]
-                           :file-min "cljsjs/create-react-class/production/create-react-class.min.inc.js"
-                           :global-exports '{create-react-class createReactClass}}
-                          {:file "cljsjs/react-dom/development/react-dom.inc.js"
-                           :provides ["react-dom" "cljsjs.react.dom"]
-                           :requires ["react"]
-                           :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
-                           :global-exports '{react-dom ReactDOM}}])
-         :externs (mapv #(lu/copy-from-resources! % dir)
-                    ["cljsjs/react/common/react.ext.js"
-                     "cljsjs/create-react-class/common/create-react-class.ext.js"
-                     "cljsjs/react-dom/common/react-dom.ext.js"])
-         :warning-handlers [on-warning]})
+      (env/with-compiler-env *env
+        (build dir opts))
       {:type :visual
-       :warnings @warnings}
+       :warnings @*warnings}
       (catch Exception e
         (.printStackTrace e)
         {:type :visual
-         :warnings @warnings
+         :warnings @*warnings
          :exception (merge
                       {:message (.getMessage e)}
                       (select-keys (ex-data e) [:line :column]))}))))
@@ -287,6 +289,7 @@
             {:url url
              :server server
              :app-bridge bridge
+             :*env *env
              :editor-file-watcher
              (or (get-in @runtime-state [:projects dir :editor-file-watcher])
                  (e/create-file-watcher dir runtime-state))

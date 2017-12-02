@@ -45,12 +45,14 @@
     (doseq [file (.listFiles projects-dir)
             :when (and (.isDirectory file)
                        (-> file .getName (.startsWith ".") not))]
+      ; delete the .out dir in case Lightmod updated any libraries
       (let [out-dir (io/file file ".out")]
         (try
           (when (.exists out-dir)
             (u/delete-children-recursively! out-dir))
           (catch Exception _))
         (.mkdir out-dir))
+      ; create tab
       (-> projects .getTabs (.add (ui/create-tab scene file a/start-app! a/stop-app!))))
     ; initialize state
     (swap! runtime-state assoc

@@ -14,6 +14,7 @@
            [javafx.scene Scene]
            [javafx.scene.image ImageView]
            [javafx.scene.control Button ContentDisplay Label]
+           [javafx.beans.value ChangeListener]
            [nightcode.utils Bridge]))
 
 (defn open-in-file-browser!
@@ -213,4 +214,33 @@
             (.flush))))
       :server-repl-pipes
       (lrepl/start-repl-thread! pipes start-ns on-recv))))
+
+(defn init-docs! [^Scene scene]
+  (let [docs (.lookup scene "#docs")
+        back-btn (.lookup scene "#back")
+        forward-btn (.lookup scene "#forward")
+        ^Tab tab (-> (.lookup scene "#projects") .getTabs second)
+        engine (.getEngine docs)
+        history (-> docs .getEngine .getHistory)]
+    (.setOnAction back-btn
+      (reify EventHandler
+        (handle [this event]
+          (.go history -1))))
+    (.setOnAction forward-btn
+      (reify EventHandler
+        (handle [this event]
+          (.go history 1))))
+    (-> history
+        .currentIndexProperty
+        (.addListener
+          (reify ChangeListener
+            (changed [this observable old-value new-value]
+              (.setDisable back-btn (= 0 (.getCurrentIndex history)))
+              (.setDisable forward-btn (-> history .getEntries count dec (= (.getCurrentIndex history))))))))
+    (.setOnSelectionChanged tab
+      (reify EventHandler
+        (handle [this event]
+          (when (-> event .getTarget .isSelected)
+            (.reload engine)))))
+    (.load engine (str "http://localhost:" (:doc-port @runtime-state)))))
 

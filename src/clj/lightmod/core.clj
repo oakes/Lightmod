@@ -67,10 +67,14 @@
                        :theme :light
                        :text-size 16
                        :auto-save? true})
+    ; show window
     (doto stage
       (.setTitle (str "Lightmod " version))
       (.setScene scene)
       (.show))
+    ; initialize docs tab
+    (ui/init-docs! scene)
+    ; set up shortcuts
     (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
     ; apply the prefs
     (let [theme-buttons (->> (.lookup scene "#settings")

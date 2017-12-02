@@ -15,7 +15,9 @@
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
+<?import javafx.scene.web.WebView?>
 
 <TabPane fx:id="projects" prefHeight="634.0" prefWidth="872.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lightmod.controller">
   <tabs>
@@ -144,6 +146,21 @@
                   <Hyperlink fx:id="new_version" layoutX="14.0" layoutY="15.0" onAction="#onNewVersion" text="New Version of Lightmod!" visible="false" AnchorPane.leftAnchor="10.0" AnchorPane.topAnchor="10.0" />
                </children>
             </AnchorPane>
+         </content>
+      </Tab>
+      <Tab closable="false" text="Docs">
+         <content>
+            <VBox>
+               <children>
+                  <HBox prefHeight="0.0" prefWidth="200.0">
+                     <children>
+                        <Button fx:id="back" disable="true" mnemonicParsing="false" text="&lt;" />
+                        <Button fx:id="forward" disable="true" mnemonicParsing="false" text="&gt;" />
+                     </children>
+                  </HBox>
+                  <WebView fx:id="docs" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />
+               </children>
+            </VBox>
          </content>
       </Tab>
   </tabs>

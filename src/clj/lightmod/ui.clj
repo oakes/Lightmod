@@ -241,6 +241,8 @@
       (reify EventHandler
         (handle [this event]
           (when (-> event .getTarget .isSelected)
-            (.reload engine)))))
+            (.reload engine)
+            (when (empty? (:projects @runtime-state))
+              (alert! "To see ClojureScript docs here, open at least one project first!"))))))
     (.load engine (str "http://localhost:" (:doc-port @runtime-state)))))
 

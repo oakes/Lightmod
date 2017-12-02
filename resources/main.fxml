@@ -156,6 +156,7 @@
                      <children>
                         <Button fx:id="back" disable="true" mnemonicParsing="false" text="&lt;" />
                         <Button fx:id="forward" disable="true" mnemonicParsing="false" text="&gt;" />
+                        <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#onOpenDocsInWebBrowser" text="Open in Web Browser" />
                      </children>
                   </HBox>
                   <WebView fx:id="docs" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />

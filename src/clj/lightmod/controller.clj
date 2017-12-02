@@ -39,7 +39,8 @@
              [onOpenInWebBrowser [javafx.event.ActionEvent] void]
              [onRestart [javafx.event.ActionEvent] void]
              [onNewVersion [javafx.event.ActionEvent] void]
-             [onExport [javafx.event.ActionEvent] void]]))
+             [onExport [javafx.event.ActionEvent] void]
+             [onOpenDocsInWebBrowser [javafx.event.ActionEvent] void]]))
 
 (defn apply-template! [dir project-type project-name dir-name]
   (.mkdirs dir)
@@ -283,6 +284,12 @@
 
 (defn -onOpenInWebBrowser [this ^ActionEvent event]
   (-> event .getSource .getScene ui/open-in-web-browser!))
+
+; open docs in browser
+
+(defn -onOpenDocsInWebBrowser [this ^ActionEvent event]
+  (-> event .getSource .getScene (ui/open-in-web-browser!
+                                   (str "http://localhost:" (:doc-port @runtime-state)))))
 
 ; restart
 

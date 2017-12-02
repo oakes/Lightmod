@@ -20,8 +20,6 @@
   (:import [javafx.application Platform]
            [javafx.event EventHandler]))
 
-(defonce *env (env/default-compiler-env))
-
 (defn send-message! [project-pane dir msg]
   (when (lu/current-project? dir)
     (lr/send-message! dir msg)
@@ -106,7 +104,7 @@
       (when-not (.exists (io/file dir "client.cljs"))
         (throw (Exception. "You must have a client.cljs file.")))
       (lu/check-namespaces! dir false)
-      (env/with-compiler-env *env
+      (env/with-compiler-env (:*env @runtime-state)
         (build dir opts))
       {:type :visual
        :warnings @*warnings}
@@ -289,7 +287,6 @@
             {:url url
              :server server
              :app-bridge bridge
-             :*env *env
              :editor-file-watcher
              (or (get-in @runtime-state [:projects dir :editor-file-watcher])
                  (e/create-file-watcher dir runtime-state))

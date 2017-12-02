@@ -12,7 +12,9 @@
             [ring.middleware.content-type :refer [wrap-content-type]]
             [ring.util.response :refer [redirect not-found]]
             [ring.middleware.reload]
-            [clojure.data.json :as json])
+            [clojure.data.json :as json]
+            [cljs.env :as env]
+            [dynadoc.core :as dyn])
   (:import [javafx.application Application Platform]
            [javafx.fxml FXMLLoader]
            [javafx.stage Stage]
@@ -147,7 +149,14 @@
   (when (= "Linux" (System/getProperty "os.name"))
     (System/setProperty "prism.lcdtext" "false")
     (System/setProperty "prism.text" "t2k"))
-  (swap! runtime-state assoc :web-port (start-web-server!))
+  (let [*env (env/default-compiler-env)]
+    (swap! runtime-state assoc
+      :web-port (start-web-server!)
+      :doc-port (-> {:port 0 :cljs-env *env}
+                    dyn/start
+                    meta
+                    :local-port)
+      :*env *env))
   (Application/launch lightmod.core (into-array String args)))
 
 (defn dev-main []

@@ -15,7 +15,7 @@
                    :exclusions [leiningen
                                 play-cljs/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]]
-                  [dynadoc "1.1.1" :exclusions [cljsjs/react cljsjs/react-dom]]
+                  [dynadoc "1.1.2"]
                   ; make sure the rest of this is in the boot template
                   ; so exported projects have the same deps
                   [org.clojure/clojure "1.9.0-RC2"]

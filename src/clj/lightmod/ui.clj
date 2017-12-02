@@ -219,6 +219,7 @@
   (let [docs (.lookup scene "#docs")
         back-btn (.lookup scene "#back")
         forward-btn (.lookup scene "#forward")
+        cljs-warning (.lookup scene "#cljs_warning")
         ^Tab tab (-> (.lookup scene "#projects") .getTabs second)
         engine (.getEngine docs)
         history (-> docs .getEngine .getHistory)]
@@ -242,7 +243,6 @@
         (handle [this event]
           (when (-> event .getTarget .isSelected)
             (.reload engine)
-            (when (empty? (:projects @runtime-state))
-              (alert! "To see ClojureScript docs here, open at least one project first!"))))))
+            (.setVisible cljs-warning (empty? (:projects @runtime-state)))))))
     (.load engine (str "http://localhost:" (:doc-port @runtime-state)))))
 

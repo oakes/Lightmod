@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.CustomMenuItem?>
@@ -157,6 +158,14 @@
                         <Button fx:id="back" disable="true" mnemonicParsing="false" text="&lt;" />
                         <Button fx:id="forward" disable="true" mnemonicParsing="false" text="&gt;" />
                         <Button minWidth="-Infinity" mnemonicParsing="false" onAction="#onOpenDocsInWebBrowser" text="Open in Web Browser" />
+                        <Label fx:id="cljs_warning" text="To see ClojureScript docs here, click on at least one project first!" visible="false" HBox.hgrow="ALWAYS">
+                           <font>
+                              <Font size="14.0" />
+                           </font>
+                           <padding>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                        </Label>
                      </children>
                   </HBox>
                   <WebView fx:id="docs" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS" />

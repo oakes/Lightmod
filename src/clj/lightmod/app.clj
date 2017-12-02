@@ -89,7 +89,8 @@
                "cljsjs/react-dom/common/react-dom.ext.js"])})
 
 (defn compile-cljs! [dir]
-  (let [*warnings (atom [])
+  (let [cljs-dir (io/file dir ".out" (-> dir io/file .getName))
+        *warnings (atom [])
         on-warning (fn [warning-type env extra]
                      (when-not (#{:infer-warning} warning-type)
                        (swap! *warnings conj
@@ -100,6 +101,10 @@
                            (select-keys env [:line :column])))))
         opts (assoc (get-cljs-options dir)
                :warning-handlers [on-warning])]
+    (try
+      (when (.exists cljs-dir)
+        (u/delete-children-recursively! cljs-dir))
+      (catch Exception _))
     (try
       (when-not (.exists (io/file dir "client.cljs"))
         (throw (Exception. "You must have a client.cljs file.")))

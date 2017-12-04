@@ -29,7 +29,7 @@
                   [reagent "0.8.0-alpha2"]
                   [cljs-react-material-ui "0.2.48"]
                   [rum "0.10.8"]
-                  [play-cljs "0.11.0"]
+                  [play-cljs "0.11.1"]
                   [compojure "1.6.0"]
                   [com.rpl/specter "1.0.4"]
                   [com.taoensso/sente "1.11.0"]
@@ -93,9 +93,10 @@
     (conj (get-env :dependencies)
       '[javax.xml.bind/jaxb-api "2.3.0" :scope "test"]))
   (comp
-    (cljs :optimizations :advanced)
+    (cljs)
     (target)
     (with-pass-thru _
+      (.renameTo (io/file "target/dynadoc-extend/main.js") (io/file "resources/dynadoc-extend/main.js"))
       (.renameTo (io/file "target/public/paren-soup.js") (io/file "resources/public/paren-soup.js"))
       (.renameTo (io/file "target/public/codemirror.js") (io/file "resources/public/codemirror.js"))
       (.renameTo (io/file "target/public/loading.js") (io/file "resources/public/loading.js")))))

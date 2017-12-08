@@ -15,7 +15,7 @@
                    :exclusions [leiningen
                                 play-cljs/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]]
-                  [dynadoc "1.1.4"
+                  [dynadoc "1.1.5"
                    :exclusions [javax.xml.bind/jaxb-api]]
                   ; make sure the rest of this is in the boot template
                   ; so exported projects have the same deps

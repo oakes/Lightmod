@@ -5,7 +5,7 @@
                   [org.clojure/test.check "0.9.0" :scope "test"]
                   [nightlight "2.0.4" :scope "test"]
                   ; project deps
-                  [org.clojure/clojure "1.9.0-beta4"]
+                  [org.clojure/clojure "1.9.0"]
                   [org.clojure/clojurescript "1.9.946"]
                   [org.clojure/core.async "0.3.443"]
                   [org.clojure/data.json "0.2.6"]

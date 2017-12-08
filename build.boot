@@ -19,7 +19,7 @@
                    :exclusions [javax.xml.bind/jaxb-api]]
                   ; make sure the rest of this is in the boot template
                   ; so exported projects have the same deps
-                  [org.clojure/clojure "1.9.0-RC2"]
+                  [org.clojure/clojure "1.9.0"]
                   [org.clojure/clojurescript "1.9.946"]
                   [org.clojure/core.async "0.3.443"]
                   [org.clojure/data.json "0.2.6"]

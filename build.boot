@@ -48,7 +48,7 @@
 (task-options!
   sift {:include #{#"\.jar$"}}
   pom {:project 'lightmod
-       :version "1.1.3"
+       :version "1.1.4-SNAPSHOT"
        :description "An all-in-one tool for full stack Clojure"
        :url "https://github.com/oakes/Lightmod"
        :license {"Public Domain" "http://unlicense.org/UNLICENSE"}}

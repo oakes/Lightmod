@@ -1,0 +1,34 @@
+{:paths ["src/clj" "src/cljs" "resources"]
+ :deps {org.clojure/clojure {:mvn/version "1.9.0"}
+        paren-soup {:mvn/version "2.9.3" :scope "test"}
+        mistakes-were-made {:mvn/version "1.7.3"
+                            :scope "test"}
+        cljsjs/codemirror {:mvn/version "5.24.0-1"
+                           :scope "test"}
+        hawk {:mvn/version "0.2.11"}
+        eval-soup {:mvn/version "1.2.3"}
+        org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
+        org.clojure/tools.reader {:mvn/version "1.1.0"}
+        nightcode {:mvn/version "2.5.1"
+                   :exclusions [leiningen
+                                play-cljs/lein-template
+                                org.eclipse.jgit/org.eclipse.jgit]}
+        dynadoc {:mvn/version "1.1.6"
+                 :exclusions [javax.xml.bind/jaxb-api]}
+        ; make sure the rest of this is in the boot template
+        ; so exported projects have the same deps
+        org.clojure/core.async {:mvn/version "0.3.443"}
+        org.clojure/data.json {:mvn/version "0.2.6"}
+        org.clojure/tools.cli {:mvn/version "0.3.5"}
+        http-kit {:mvn/version "2.2.0"}
+        ring {:mvn/version "1.6.2"}
+        reagent {:mvn/version "0.8.0-alpha2"}
+        cljs-react-material-ui {:mvn/version "0.2.48"}
+        rum {:mvn/version "0.10.8"}
+        play-cljs {:mvn/version "0.11.2"}
+        compojure {:mvn/version "1.6.0"}
+        com.rpl/specter {:mvn/version "1.0.4"}
+        com.taoensso/sente {:mvn/version "1.11.0"}
+        org.clojure/java.jdbc {:mvn/version "0.7.3"}
+        com.h2database/h2 {:mvn/version "1.4.196"}
+        honeysql {:mvn/version "0.9.1"}}}

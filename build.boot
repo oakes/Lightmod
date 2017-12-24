@@ -1,11 +1,8 @@
 (set-env!
   :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
-                  [adzerk/boot-reload "0.5.2"]
                   [org.clojars.oakes/boot-tools-deps "0.1.4" :scope "test"]
-                  ; this needs to be available early,
-                  ; so it can't go in deps.edn
-                  [org.clojure/clojurescript "1.9.946"]]
+                  [com.google.guava/guava "21.0" :scope "test"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
                               :username (System/getenv "CLOJARS_USER")

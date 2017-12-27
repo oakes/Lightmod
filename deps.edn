@@ -1,12 +1,5 @@
 {:paths ["src/clj" "src/cljs" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.9.0"}
-        org.clojure/clojurescript {:mvn/version "1.9.946"}
-        adzerk/boot-reload {:mvn/version "0.5.2"}
-        paren-soup {:mvn/version "2.9.3" :scope "test"}
-        mistakes-were-made {:mvn/version "1.7.3"
-                            :scope "test"}
-        cljsjs/codemirror {:mvn/version "5.24.0-1"
-                           :scope "test"}
         hawk {:mvn/version "0.2.11"}
         eval-soup {:mvn/version "1.2.3"}
         org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
@@ -33,4 +26,9 @@
         com.taoensso/sente {:mvn/version "1.11.0"}
         org.clojure/java.jdbc {:mvn/version "0.7.3"}
         com.h2database/h2 {:mvn/version "1.4.196"}
-        honeysql {:mvn/version "0.9.1"}}}
+        honeysql {:mvn/version "0.9.1"}}
+ :aliases {:cljs {:extra-deps {org.clojure/clojurescript {:mvn/version "1.9.946"}
+                               paren-soup {:mvn/version "2.9.3"}
+                               mistakes-were-made {:mvn/version "1.7.3"}
+                               cljsjs/codemirror {:mvn/version "5.24.0-1"}
+                               adzerk/boot-reload {:mvn/version "0.5.2"}}}}}

@@ -1,7 +1,7 @@
 (set-env!
   :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
-                  [org.clojars.oakes/boot-tools-deps "0.1.4" :scope "test"]
+                  [org.clojars.oakes/boot-tools-deps "0.1.4.1" :scope "test"]
                   [com.google.guava/guava "21.0" :scope "test"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
@@ -62,7 +62,7 @@
     (conj (get-env :dependencies)
       '[javax.xml.bind/jaxb-api "2.3.0" :scope "test"]))
   (comp
-    (deps)
+    (deps :aliases [:cljs])
     (cljs)
     (target)
     (with-pass-thru _

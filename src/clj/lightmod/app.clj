@@ -44,11 +44,15 @@
      (when-not (.exists (io/file dir "server.clj"))
        (throw (Exception. "You must have a server.clj file.")))
      (lu/check-namespaces! dir true)
-     (with-security
-       (if file-path
-         (load-file file-path)
-         (doseq [f (lu/get-files-in-dep-order dir)]
-           (load-file (.getCanonicalPath f)))))
+     (let [load-files (fn []
+                        (if file-path
+                          (load-file file-path)
+                          (doseq [f (lu/get-files-in-dep-order dir)]
+                            (load-file (.getCanonicalPath f)))))]
+       (if (:dev? @runtime-state)
+         (load-files)
+         (with-security
+           (load-files))))
      {:type :visual-clj}
      (catch Exception e
        (.printStackTrace e)
@@ -126,7 +130,9 @@
     (let [-main (resolve (symbol (lu/path->ns dir "server") "-main"))]
       (when (nil? -main)
         (throw (Exception. "Can't find a -main function in your server.clj file.")))
-      (let [server (thunk-timeout #(with-security (-main)) 5000)]
+      (let [server (if (:dev? @runtime-state)
+                     (-main)
+                     (thunk-timeout #(with-security (-main)) 5000))]
         (when-not (and (fn? server)
                        (-> server meta :local-port number?))
           (throw (Exception. "The -main function in server.clj must call run-server as its last step.")))

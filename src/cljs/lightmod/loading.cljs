@@ -1,6 +1,7 @@
 (ns lightmod.loading
   (:require [lightmod.init]
             [reagent.core :as r]
+            [cljsjs.material-ui]
             [cljs-react-material-ui.core :refer [get-mui-theme]]
             [cljs-react-material-ui.reagent :as ui]
             [goog.object :as gobj]

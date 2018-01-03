@@ -1,15 +1,15 @@
 (ns [[name]].utils
   (:require [play-cljs.core :as p]))
 
-(def ^:const duration 0.15)
-(def ^:const damping 0.1)
-(def ^:const max-velocity 0.3)
-(def ^:const max-jump-velocity (* max-velocity 4))
-(def ^:const deceleration 0.9)
-(def ^:const gravity 0.2)
-(def ^:const map-name "level1")
-(def ^:const player-width (/ 70 3))
-(def ^:const player-height (/ 100 3))
+(def duration 0.15)
+(def damping 0.1)
+(def max-velocity 0.3)
+(def max-jump-velocity (* max-velocity 4))
+(def deceleration 0.9)
+(def gravity 0.2)
+(def map-name "level1")
+(def player-width (/ 70 3))
+(def player-height (/ 100 3))
 
 (defn decelerate
   [velocity]

@@ -59,22 +59,22 @@
      (.-lineNumber form)]
     (pr-str form)))
 
-(def current-ns (atom 'cljs.user))
+(def *current-ns (atom 'cljs.user))
 
 (defn ^:export eval-code [path code]
   (when js/window.java
     (let [; don't let instarepl change the client repl's current-ns
-          current-ns (if path
-                       (atom 'cljs.user)
-                       current-ns)]
+          *current-ns (if path
+                        (atom 'cljs.user)
+                        *current-ns)]
       (es/code->results
         (read-string code)
         (fn [results]
           (.onevalcomplete js/window.java
             path
             (pr-str (mapv form->serializable results))
-            (str @current-ns)))
-        {:current-ns current-ns
+            (str @*current-ns)))
+        {:*current-ns *current-ns
          :custom-load (fn [opts cb]
                         (cb {:lang :clj :source ""}))}))))
 

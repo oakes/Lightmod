@@ -1,7 +1,7 @@
 (set-env!
   :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
                   [adzerk/boot-cljs "2.1.4" :scope "test"]
-                  [org.clojars.oakes/boot-tools-deps "0.1.4.1" :scope "test"]
+                  [seancorfield/boot-tools-deps "0.1.4" :scope "test"]
                   [com.google.guava/guava "21.0" :scope "test"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
@@ -9,6 +9,7 @@
                               :password (System/getenv "CLOJARS_PASS")}]))
 
 (require
+  '[clojure.edn :as edn]
   '[adzerk.boot-cljs :refer [cljs]]
   '[clojure.java.io :as io]
   '[boot-tools-deps.core :refer [deps]])
@@ -19,7 +20,19 @@
        :version "1.1.5-SNAPSHOT"
        :description "An all-in-one tool for full stack Clojure"
        :url "https://github.com/oakes/Lightmod"
-       :license {"Public Domain" "http://unlicense.org/UNLICENSE"}}
+       :license {"Public Domain" "http://unlicense.org/UNLICENSE"}
+       :dependencies (->> "deps.edn"
+                          slurp
+                          edn/read-string
+                          :deps
+                          (reduce
+                            (fn [deps [artifact info]]
+                              (if-let [version (:mvn/version info)]
+                                (conj deps
+                                  (transduce cat conj [artifact version]
+                                    (select-keys info [:scope :exclusions])))
+                                deps))
+                            []))}
   push {:repo "clojars"}
   aot {:namespace '#{lightmod.core}}
   jar {:main 'lightmod.core
@@ -73,9 +86,9 @@
 
 (deftask local []
   (set-env! :resource-paths #{"src/clj" "src/cljs"})
-  (comp (deps) (pom) (jar) (install)))
+  (comp (pom) (jar) (install)))
 
 (deftask deploy []
   (set-env! :resource-paths #{"src/clj" "src/cljs"})
-  (comp (deps) (pom) (jar) (push)))
+  (comp (pom) (jar) (push)))
 

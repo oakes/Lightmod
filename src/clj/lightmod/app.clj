@@ -13,7 +13,7 @@
             [lightmod.repl :as lrepl]
             [lightmod.ui :as ui]
             [lightmod.utils :as lu]
-            [eval-soup.core :refer [with-security]]
+            [eval-soup.core :as es]
             [eval-soup.clojail :refer [thunk-timeout]]
             [clojure.core.async :refer [chan sliding-buffer put! <!! go-loop]]
             [cljs.env :as env])
@@ -44,15 +44,15 @@
      (when-not (.exists (io/file dir "server.clj"))
        (throw (Exception. "You must have a server.clj file.")))
      (lu/check-namespaces! dir true)
-     (let [load-files (fn []
-                        (if file-path
-                          (load-file file-path)
-                          (doseq [f (lu/get-files-in-dep-order dir)]
-                            (load-file (.getCanonicalPath f)))))]
-       (if (:dev? @runtime-state)
-         (load-files)
-         (with-security
-           (load-files))))
+     (cond-> (fn []
+               (if file-path
+                 (load-file file-path)
+                 (doseq [f (lu/get-files-in-dep-order dir)]
+                   (load-file (.getCanonicalPath f)))))
+             (not (:dev? @runtime-state))
+             es/wrap-security
+             true
+             (apply []))
      {:type :visual-clj}
      (catch Exception e
        (.printStackTrace e)
@@ -132,7 +132,7 @@
         (throw (Exception. "Can't find a -main function in your server.clj file.")))
       (let [server (if (:dev? @runtime-state)
                      (-main)
-                     (thunk-timeout #(with-security (-main)) 5000))]
+                     (thunk-timeout #(es/with-security (-main)) 5000))]
         (when-not (and (fn? server)
                        (-> server meta :local-port number?))
           (throw (Exception. "The -main function in server.clj must call run-server as its last step.")))

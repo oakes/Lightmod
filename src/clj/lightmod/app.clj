@@ -14,11 +14,12 @@
             [lightmod.ui :as ui]
             [lightmod.utils :as lu]
             [eval-soup.core :as es]
-            [eval-soup.clojail :refer [thunk-timeout]]
             [clojure.core.async :refer [chan sliding-buffer put! <!! go-loop]]
             [cljs.env :as env])
   (:import [javafx.application Platform]
            [javafx.event EventHandler]))
+
+(def timeout 4000)
 
 (defn send-message! [project-pane dir msg]
   (when (lu/current-project? dir)
@@ -50,7 +51,7 @@
                  (doseq [f (lu/get-files-in-dep-order dir)]
                    (load-file (.getCanonicalPath f)))))
              (not (:dev? @runtime-state))
-             es/wrap-security
+             (-> es/wrap-security (es/wrap-timeout timeout))
              true
              (apply []))
      {:type :visual-clj}
@@ -130,9 +131,11 @@
     (let [-main (resolve (symbol (lu/path->ns dir "server") "-main"))]
       (when (nil? -main)
         (throw (Exception. "Can't find a -main function in your server.clj file.")))
-      (let [server (if (:dev? @runtime-state)
-                     (-main)
-                     (thunk-timeout #(es/with-security (-main)) 5000))]
+      (let [server (cond-> -main
+                           (not (:dev? @runtime-state))
+                           (-> es/wrap-security (es/wrap-timeout timeout))
+                           true
+                           (apply []))]
         (when-not (and (fn? server)
                        (-> server meta :local-port number?))
           (throw (Exception. "The -main function in server.clj must call run-server as its last step.")))

@@ -8,13 +8,13 @@
             [cljs.reader :refer [read-string]]
             [adzerk.boot-reload.client :as client]))
 
-(def error? (r/atom false))
+(def *error? (r/atom false))
 
 (defn ^:export show-error [msg]
   (let [msg (read-string msg)]
     (when (or (:exception msg)
               (seq (:warnings msg)))
-      (reset! error? true))
+      (reset! *error? true))
     (client/handle msg nil)))
 
 (defn app []
@@ -24,7 +24,7 @@
                 :left "50%"
                 :top "50%"
                 :transform "translate(-50%, -50%)"}]
-     (if @error?
+     (if @*error?
        [:div {:style style}
         [:p "Encountered an error."]
         [:p "Please fix it and press Restart."]]

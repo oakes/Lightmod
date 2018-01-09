@@ -1,6 +1,5 @@
 (ns lightmod.repl
-  (:require [nightcode.state :refer [runtime-state]]
-            [nightcode.utils :as u])
+  (:require [nightcode.utils :as u])
   (:import [clojure.lang LineNumberingPushbackReader]
            [java.io PipedWriter PipedReader PrintWriter]))
 

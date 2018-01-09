@@ -2,18 +2,18 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.set :as set]
-            [nightcode.state :refer [pref-state runtime-state]]
+            [nightcode.state :refer [*pref-state *runtime-state]]
             [nightcode.utils :as u]
             [clojure.tools.namespace.find :as find]
             [clojure.tools.namespace.file :as file]
             [clojure.tools.namespace.track :as track]))
 
 (defn get-project-dir
-  ([] (some-> @pref-state :selection io/file get-project-dir))
+  ([] (some-> @*pref-state :selection io/file get-project-dir))
   ([file]
    (loop [f file]
      (when-let [parent (.getParentFile f)]
-       (if (= parent (:projects-dir @runtime-state))
+       (if (= parent (:projects-dir @*runtime-state))
          f
          (recur parent))))))
 

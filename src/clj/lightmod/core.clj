@@ -5,7 +5,7 @@
             [lightmod.ui :as ui]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
-            [nightcode.state :refer [pref-state runtime-state init-pref-state!]]
+            [nightcode.state :refer [*pref-state *runtime-state init-pref-state!]]
             [nightcode.utils :as u]
             [ring.adapter.jetty :refer [run-jetty]]
             [ring.middleware.resource :refer [wrap-resource]]
@@ -57,7 +57,7 @@
       ; create tab
       (-> projects .getTabs (.add (ui/create-tab scene file a/start-app! a/stop-app!))))
     ; initialize state
-    (swap! runtime-state assoc
+    (swap! *runtime-state assoc
       :stage stage
       :prefs (.node (Preferences/userRoot) "lightmod")
       :projects-dir projects-dir
@@ -75,7 +75,7 @@
     ; initialize docs tab
     (ui/init-docs! scene)
     ; set up shortcuts
-    (shortcuts/set-shortcut-listeners! stage pref-state runtime-state actions)
+    (shortcuts/set-shortcut-listeners! stage *pref-state *runtime-state actions)
     ; apply the prefs
     (let [theme-buttons (->> (.lookup scene "#settings")
                              .getItems
@@ -83,7 +83,7 @@
                              first
                              .getContent
                              .getChildren)]
-      (case (:theme @pref-state)
+      (case (:theme @*pref-state)
         :dark (.fire (.get theme-buttons 0))
         :light (.fire (.get theme-buttons 1))
         nil))
@@ -92,7 +92,7 @@
                                 .getItems
                                 (filter #(= "auto_save" (.getId %)))
                                 first)]
-      (.setSelected auto-save-button (:auto-save? @pref-state)))
+      (.setSelected auto-save-button (:auto-save? @*pref-state)))
     ; refresh things on window focus
     (.addListener (.focusedProperty stage)
       (reify ChangeListener
@@ -114,14 +114,14 @@
                                  (-> f .getName tab-names not))]
                 (.add tabs (ui/create-tab scene f a/start-app! a/stop-app!))))
             ; remove any editors whose files no longer exist
-            (e/remove-non-existing-editors! runtime-state)
+            (e/remove-non-existing-editors! *runtime-state)
             ; force existing selection to refresh
-            (when-let [selection (:selection @pref-state)]
-              (doto pref-state
+            (when-let [selection (:selection @*pref-state)]
+              (doto *pref-state
                 (swap! assoc :selection nil)
                 (swap! assoc :selection selection)))))))
     ; check for updates
-    (when-not (:dev? @runtime-state)
+    (when-not (:dev? @*runtime-state)
       (future
         (try
           (when (some-> "https://clojars.org/api/artifacts/lightmod"
@@ -154,7 +154,7 @@
     (System/setProperty "prism.lcdtext" "false")
     (System/setProperty "prism.text" "t2k"))
   (let [*env (env/default-compiler-env)]
-    (swap! runtime-state assoc
+    (swap! *runtime-state assoc
       :web-port (start-web-server!)
       :doc-port (-> {:port 0 :cljs-env *env}
                     dyn/start
@@ -164,6 +164,6 @@
   (Application/launch lightmod.core (into-array String args)))
 
 (defn dev-main []
-  (swap! runtime-state assoc :dev? true)
+  (swap! *runtime-state assoc :dev? true)
   (-main))
 

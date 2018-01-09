@@ -5,7 +5,7 @@
             [nightcode.utils :as u]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
-            [nightcode.state :refer [pref-state runtime-state]])
+            [nightcode.state :refer [*pref-state *runtime-state]])
   (:import [javafx.application Platform]
            [javafx.scene.control Alert Alert$AlertType Tab]
            [javafx.event EventHandler]
@@ -19,7 +19,7 @@
 
 (defn open-in-file-browser!
   ([^Scene scene]
-   (open-in-file-browser! scene (:selection @pref-state)))
+   (open-in-file-browser! scene (:selection @*pref-state)))
   ([^Scene scene path]
    (javax.swing.SwingUtilities/invokeLater
      (fn []
@@ -29,7 +29,7 @@
 (defn open-in-web-browser!
   ([^Scene scene]
    (when-let [project (lu/get-project-dir)]
-     (when-let [url (get-in @runtime-state [:projects (.getCanonicalPath project) :url])]
+     (when-let [url (get-in @*runtime-state [:projects (.getCanonicalPath project) :url])]
        (open-in-web-browser! scene url))))
   ([^Scene scene url]
    (javax.swing.SwingUtilities/invokeLater
@@ -60,7 +60,7 @@
             (when (-> event .getTarget .isClosable)
               (if (-> event .getTarget .isSelected)
                 (do
-                  (swap! pref-state assoc :selection dir)
+                  (swap! *pref-state assoc :selection dir)
                   (start-app! project-pane dir))
                 (let [editors (-> project-pane
                                   (.lookup "#project")
@@ -97,11 +97,11 @@
                   (.setPrefHeight 150)
                   (.setOnAction (reify EventHandler
                                   (handle [this event]
-                                    (swap! pref-state assoc :selection (.getCanonicalPath file)))))))))
+                                    (swap! *pref-state assoc :selection (.getCanonicalPath file)))))))))
     pane))
 
 (defn eval-cljs-code [path dir code]
-  (when-let [pane (get-in @runtime-state [:projects dir :pane])]
+  (when-let [pane (get-in @*runtime-state [:projects dir :pane])]
     (when-let [app (.lookup pane "#app")]
       (try
         (some-> (.getEngine app)
@@ -111,7 +111,7 @@
       nil)))
 
 (defn set-selection-listener! [scene]
-  (add-watch pref-state :selection-changed
+  (add-watch *pref-state :selection-changed
     (fn [_ _ _ {:keys [selection]}]
       (when selection
         (let [file (io/file selection)]
@@ -122,13 +122,13 @@
                                 first)]
               (when-let [pane (or (when (.isDirectory file)
                                     (dir-pane file))
-                                  (get-in @runtime-state [:editor-panes selection])
-                                  (when-let [new-editor (e/editor-pane pref-state runtime-state file
+                                  (get-in @*runtime-state [:editor-panes selection])
+                                  (when-let [new-editor (e/editor-pane *pref-state *runtime-state file
                                                           (case (-> file .getName u/get-extension)
-                                                            ("clj" "cljc") e/eval-code
+                                                            ("clj" "cljc") (partial e/eval-code (:dev? @*runtime-state))
                                                             "cljs" (partial eval-cljs-code selection (.getCanonicalPath project-dir))
                                                             nil))]
-                                    (swap! runtime-state update :editor-panes assoc selection new-editor)
+                                    (swap! *runtime-state update :editor-panes assoc selection new-editor)
                                     new-editor))]
                 (let [content (.getContent tab)
                       editors (-> content
@@ -156,10 +156,10 @@
                    (try
                      (doto (.getEngine webview)
                        (.executeScript (if repl? "initConsole(true)" "initConsole(false)"))
-                       (.executeScript (case (:theme @pref-state)
+                       (.executeScript (case (:theme @*pref-state)
                                          :dark "changeTheme(true)"
                                          :light "changeTheme(false)"))
-                       (.executeScript (format "setTextSize(%s)" (:text-size @pref-state))))
+                       (.executeScript (format "setTextSize(%s)" (:text-size @*pref-state))))
                      (on-load)
                      (catch Exception e (.printStackTrace e))))
                  (onautosave [this])
@@ -174,7 +174,7 @@
               (.executeScript "window")
               (.setMember "java" bridge)))))
     (.load engine (str "http://localhost:"
-                    (:web-port @runtime-state)
+                    (:web-port @*runtime-state)
                     "/paren-soup.html"))
     bridge))
 
@@ -243,6 +243,6 @@
         (handle [this event]
           (when (-> event .getTarget .isSelected)
             (.reload engine)
-            (.setVisible cljs-warning (empty? (:projects @runtime-state)))))))
-    (.load engine (str "http://localhost:" (:doc-port @runtime-state)))))
+            (.setVisible cljs-warning (empty? (:projects @*runtime-state)))))))
+    (.load engine (str "http://localhost:" (:doc-port @*runtime-state)))))
 

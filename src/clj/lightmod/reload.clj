@@ -1,7 +1,7 @@
 (ns lightmod.reload
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
-            [nightcode.state :refer [pref-state runtime-state]]
+            [nightcode.state :refer [*runtime-state]]
             [nightcode.utils :as u]
             [org.httpkit.server :as http]))
 
@@ -19,9 +19,9 @@
                                   ""))})))
 
 (defn connect! [dir channel]
-  (swap! runtime-state update-in [:projects dir :clients] conj channel)
+  (swap! *runtime-state update-in [:projects dir :clients] conj channel)
   (http/on-close channel
-    (fn [_] (swap! runtime-state update-in [:projects dir :clients] disj channel))))
+    (fn [_] (swap! *runtime-state update-in [:projects dir :clients] disj channel))))
 
 (defn reload-handler [dir request]
   (if-not (:websocket? request)
@@ -31,14 +31,14 @@
 (defn send-changed!
   ([dir changed] (send-changed! dir {} changed))
   ([dir opts changed]
-   (when-let [clients (get-in @runtime-state [:projects dir :clients])]
+   (when-let [clients (get-in @*runtime-state [:projects dir :clients])]
      (doseq [channel clients]
        (http/send! channel
          (pr-str {:type :reload
                   :files (map #(web-path opts %) changed)}))))))
 
 (defn send-message! [dir messages]
-  (when-let [clients (get-in @runtime-state [:projects dir :clients])]
+  (when-let [clients (get-in @*runtime-state [:projects dir :clients])]
     (doseq [channel clients]
       (http/send! channel (pr-str messages)))))
 
@@ -48,7 +48,7 @@
 (defn reload-file! [dir file]
   (->> file
        .getCanonicalPath
-       (u/get-relative-path (-> @runtime-state :projects-dir .getCanonicalPath))
+       (u/get-relative-path (-> @*runtime-state :projects-dir .getCanonicalPath))
        io/file
        hash-set
        (send-changed! dir)))

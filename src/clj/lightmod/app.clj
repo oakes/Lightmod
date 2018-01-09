@@ -2,7 +2,7 @@
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.edn :as edn]
-            [nightcode.state :refer [pref-state runtime-state]]
+            [nightcode.state :refer [*runtime-state]]
             [nightcode.editors :as e]
             [nightcode.shortcuts :as shortcuts]
             [nightcode.utils :as u]
@@ -50,7 +50,7 @@
                  (load-file file-path)
                  (doseq [f (lu/get-files-in-dep-order dir)]
                    (load-file (.getCanonicalPath f)))))
-             (not (:dev? @runtime-state))
+             (not (:dev? @*runtime-state))
              (-> es/wrap-security (es/wrap-timeout timeout))
              true
              (apply []))
@@ -114,7 +114,7 @@
       (when-not (.exists (io/file dir "client.cljs"))
         (throw (Exception. "You must have a client.cljs file.")))
       (lu/check-namespaces! dir false)
-      (env/with-compiler-env (:*env @runtime-state)
+      (env/with-compiler-env (:*env @*runtime-state)
         (build dir opts))
       {:type :visual
        :warnings @*warnings}
@@ -132,7 +132,7 @@
       (when (nil? -main)
         (throw (Exception. "Can't find a -main function in your server.clj file.")))
       (let [server (cond-> -main
-                           (not (:dev? @runtime-state))
+                           (not (:dev? @*runtime-state))
                            (-> es/wrap-security (es/wrap-timeout timeout))
                            true
                            (apply []))]
@@ -156,7 +156,7 @@
           (.call "append" (into-array [s]))))
     (catch Exception _)))
 
-(defn redirect-stdio! [logs-atom]
+(defn redirect-stdio! [*server-logs]
   (let [stdout-pipes (lrepl/create-pipes)
         stderr-pipes (lrepl/create-pipes)]
     (intern 'clojure.core '*out* (:out stdout-pipes))
@@ -167,32 +167,32 @@
       (fn [s]
         (binding [*out* (java.io.OutputStreamWriter. System/out)]
           (println s))
-        (swap! logs-atom str s)))
+        (swap! *server-logs str s)))
     (lrepl/pipe-into-console! (:in-pipe stderr-pipes)
       (fn [s]
         (binding [*out* (java.io.OutputStreamWriter. System/out)]
           (println s))
-        (swap! logs-atom str s \newline)))
+        (swap! *server-logs str s \newline)))
     {:stdout stdout-pipes
      :stderr stderr-pipes}))
 
 (defn init-server-logs! [inner-pane dir]
-  (swap! runtime-state update-in [:projects dir]
+  (swap! *runtime-state update-in [:projects dir]
     (fn [project]
-      (let [logs (or (:server-logs-atom project)
-                     (atom ""))
-            pipes (redirect-stdio! logs)
+      (let [*server-logs (or (:*server-logs project)
+                             (atom ""))
+            pipes (redirect-stdio! *server-logs)
             webview (.lookup inner-pane "#server_logs_webview")
             bridge (ui/init-console! webview false
                      (fn []
-                       (append! webview @logs)
-                       (add-watch logs :append
+                       (append! webview @*server-logs)
+                       (add-watch *server-logs :append
                          (fn [_ _ old-log new-log]
                            (Platform/runLater
                              #(append! webview (subs new-log (count old-log)))))))
                      (fn []))]
         (assoc project
-          :server-logs-atom logs
+          :*server-logs *server-logs
           :server-logs-pipes pipes
           :server-logs-bridge bridge)))))
 
@@ -203,14 +203,14 @@
     (doto f
       (-> .getParentFile .mkdirs)
       (spit (pr-str {:reload-port reload-port})))
-    (swap! runtime-state update-in [:projects dir] assoc
+    (swap! *runtime-state update-in [:projects dir] assoc
       :reload-stop-fn reload-stop-fn
       :clients #{})))
 
 (defn stop-server! [dir]
   (let [{:keys [server reload-stop-fn reload-file-watcher
-                server-logs-atom server-logs-pipes]}
-        (get-in @runtime-state [:projects dir])]
+                *server-logs server-logs-pipes]}
+        (get-in @*runtime-state [:projects dir])]
     (when server
       (try (server)
         (catch Exception _)))
@@ -218,12 +218,12 @@
       (try (reload-stop-fn)
         (catch Exception _)))
     (when reload-file-watcher (hawk/stop! reload-file-watcher))
-    (when server-logs-atom
-      (remove-watch server-logs-atom :append)
-      (let [log-size (count @server-logs-atom)
+    (when *server-logs
+      (remove-watch *server-logs :append)
+      (let [log-size (count @*server-logs)
             log-limit 10000]
         (when (> log-size log-limit)
-          (swap! server-logs-atom subs (- log-size log-limit)))))
+          (swap! *server-logs subs (- log-size log-limit)))))
     (when-let [{:keys [stdout stderr]} server-logs-pipes]
       (doto stdout
         (-> :in-pipe .close)
@@ -241,9 +241,9 @@
         client-repl-started? (atom false)]
     (reify AppBridge
       (onload [this]
-        (swap! runtime-state update-in [:projects dir]
+        (swap! *runtime-state update-in [:projects dir]
           ui/init-client-repl! inner-pane dir)
-        (swap! runtime-state update-in [:projects dir]
+        (swap! *runtime-state update-in [:projects dir]
           ui/init-server-repl! inner-pane dir))
       (onevalcomplete [this path results ns-name]
         (if-not path
@@ -265,7 +265,7 @@
                 .getEngine
                 (.executeScript "window")
                 (.call "append" (into-array [result]))))
-          (when-let [editor (get-in @runtime-state [:editor-panes path])]
+          (when-let [editor (get-in @*runtime-state [:editor-panes path])]
             (-> editor
                 (.lookup "#webview")
                 .getEngine
@@ -297,13 +297,13 @@
                           (.executeScript "window")
                           (.setMember "java" bridge)))))
                 (-> app .getEngine (.load url)))))
-          (swap! runtime-state update-in [:projects dir] merge
+          (swap! *runtime-state update-in [:projects dir] merge
             {:url url
              :server server
              :app-bridge bridge
              :editor-file-watcher
-             (or (get-in @runtime-state [:projects dir :editor-file-watcher])
-                 (e/create-file-watcher dir runtime-state))
+             (or (get-in @*runtime-state [:projects dir :editor-file-watcher])
+                 (e/create-file-watcher dir *runtime-state))
              :reload-file-watcher
              (hawk/watch! [{:paths [dir]
                             :handler (fn [ctx {:keys [kind file]}]
@@ -329,7 +329,7 @@
   (let [c (chan (sliding-buffer 1))]
     (go-loop []
       (let [dir (<!! c)]
-        (when-let [project-pane (get-in @runtime-state [:projects dir :pane])]
+        (when-let [project-pane (get-in @*runtime-state [:projects dir :pane])]
           (start-server! project-pane dir)))
       (recur))
     c))
@@ -341,7 +341,7 @@
 
 (defn start-app! [project-pane dir]
   (stop-app! project-pane dir)
-  (swap! runtime-state assoc-in [:projects dir :pane] project-pane)
+  (swap! *runtime-state assoc-in [:projects dir :pane] project-pane)
   (init-reload-server! dir)
   (-> project-pane (.lookup "#project") .getItems (.get 1) (init-server-logs! dir))
   (let [app (.lookup project-pane "#app")]
@@ -353,9 +353,9 @@
               (.setMember "java"
                 (reify AppBridge
                   (onload [this]
-                    (-> @runtime-state :build-chan (put! dir)))
+                    (-> @*runtime-state :build-chan (put! dir)))
                   (onevalcomplete [this path results ns-name])))))))
     (-> app .getEngine (.load (str "http://localhost:"
-                                (:web-port @runtime-state)
+                                (:web-port @*runtime-state)
                                 "/loading.html")))))
 

@@ -6,7 +6,7 @@
         eval-soup {:mvn/version "1.4.0"}
         org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
         org.clojure/tools.reader {:mvn/version "1.1.0"}
-        nightcode {:mvn/version "2.5.4"
+        nightcode {:mvn/version "2.5.4.1"
                    :exclusions [leiningen
                                 play-cljs/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]}
@@ -29,6 +29,6 @@
         org.clojure/java.jdbc {:mvn/version "0.7.3"}
         com.h2database/h2 {:mvn/version "1.4.196"}
         honeysql {:mvn/version "0.9.1"}}
- :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.9.4"}
-                               mistakes-were-made {:mvn/version "1.7.4"}
+ :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.9.5"}
+                               mistakes-were-made {:mvn/version "1.7.5"}
                                cljsjs/codemirror {:mvn/version "5.24.0-1"}}}}}

@@ -1,14 +1,15 @@
 (set-env!
-  :dependencies '[[org.clojure/test.check "0.9.0" :scope "test"]
-                  [adzerk/boot-cljs "2.1.4" :scope "test"]
+  :dependencies '[[adzerk/boot-cljs "2.1.4" :scope "test"]
                   [seancorfield/boot-tools-deps "0.1.4" :scope "test"]
-                  [com.google.guava/guava "21.0" :scope "test"]]
+                  [com.google.guava/guava "21.0" :scope "test"]
+                  [orchestra "2017.11.12-1"]]
   :repositories (conj (get-env :repositories)
                   ["clojars" {:url "https://clojars.org/repo/"
                               :username (System/getenv "CLOJARS_USER")
                               :password (System/getenv "CLOJARS_PASS")}]))
 
 (require
+  '[orchestra.spec.test :refer [instrument]]
   '[clojure.edn :as edn]
   '[adzerk.boot-cljs :refer [cljs]]
   '[clojure.java.io :as io]
@@ -48,10 +49,8 @@
     (deps)
     (aot)
     (with-pass-thru _
-      (require
-        '[clojure.spec.test.alpha :refer [instrument]]
-        '[lightmod.core :refer [dev-main]])
-      ((resolve 'instrument))
+      (require '[lightmod.core :refer [dev-main]])
+      (instrument)
       ((resolve 'dev-main)))))
 
 (def jar-exclusions

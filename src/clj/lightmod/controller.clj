@@ -346,7 +346,7 @@
                 (clojure.pprint/pprint
                   {:require  [(symbol (str project-name ".client"))]
                    :init-fns []
-                   :compiler-options {}})))
+                   :compiler-options {:infer-externs true}})))
             (doseq [f (.listFiles project)
                     :when (and (-> f .getName (.startsWith ".") not)
                                (-> f .getName (not= "main.js")))]

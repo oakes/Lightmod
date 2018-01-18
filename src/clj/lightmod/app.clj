@@ -19,7 +19,7 @@
   (:import [javafx.application Platform]
            [javafx.event EventHandler]))
 
-(def timeout 4000)
+(def timeout 5000)
 
 (defn send-message! [project-pane dir msg]
   (when (lu/current-project? dir)

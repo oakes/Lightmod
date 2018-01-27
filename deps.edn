@@ -6,7 +6,7 @@
         eval-soup {:mvn/version "1.4.1"}
         org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
         org.clojure/tools.reader {:mvn/version "1.1.0"}
-        nightcode {:mvn/version "2.5.6"
+        nightcode {:mvn/version "2.5.7"
                    :exclusions [leiningen
                                 play-cljs/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]}

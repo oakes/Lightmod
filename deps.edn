@@ -22,7 +22,7 @@
         reagent {:mvn/version "0.8.0-alpha2"}
         cljs-react-material-ui {:mvn/version "0.2.48"}
         rum {:mvn/version "0.10.8"}
-        play-cljs {:mvn/version "1.0.0"}
+        play-cljs {:mvn/version "1.1.0"}
         compojure {:mvn/version "1.6.0"}
         com.rpl/specter {:mvn/version "1.0.4"}
         com.taoensso/sente {:mvn/version "1.11.0"}

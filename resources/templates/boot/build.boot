@@ -17,7 +17,7 @@
                   [cljs-react-material-ui "0.2.48"]
                   [rum "0.10.8"]
                   [play-cljs "1.1.0"]
-                  [compojure "1.6.0"]
+                  [bidi "2.1.3"]
                   [com.rpl/specter "1.0.4"]
                   [com.taoensso/sente "1.11.0"]
                   [org.clojure/java.jdbc "0.7.3"]

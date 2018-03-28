@@ -65,7 +65,8 @@
     #"(?i)^META-INF\\INDEX.LIST$"))
 
 (deftask build [_ package bool "Build for javapackager."]
-  (set-env! :dependencies
+  (set-env!
+    :dependencies
     (fn [deps]
       (conj deps
         ; if building for javapackager, don't include jaxb in the final jar
@@ -75,20 +76,22 @@
   (comp (aot) (pom) (uber :exclude jar-exclusions) (jar) (sift) (target)))
 
 (deftask build-cljs []
-  (set-env! :dependencies
+  (set-env!
+    :resource-paths #(conj % "dev-resources")
+    :dependencies
     (fn [deps]
-      (->> deps
-           set
-           (into (:dependencies (read-deps-edn [:cljs])))
-           (conj '[javax.xml.bind/jaxb-api "2.3.0" :scope "test"]))))
+      (-> deps
+          set
+          (into (:dependencies (read-deps-edn [:cljs])))
+          (conj '[javax.xml.bind/jaxb-api "2.3.0" :scope "test"]))))
   (comp
     (cljs)
     (target)
     (with-pass-thru _
-      (.renameTo (io/file "target/dynadoc-extend/main.js") (io/file "resources/dynadoc-extend/main.js"))
-      (.renameTo (io/file "target/public/paren-soup.js") (io/file "resources/public/paren-soup.js"))
-      (.renameTo (io/file "target/public/codemirror.js") (io/file "resources/public/codemirror.js"))
-      (.renameTo (io/file "target/public/loading.js") (io/file "resources/public/loading.js")))))
+      (io/copy (io/file "target/dynadoc-extend/main.js") (io/file "resources/dynadoc-extend/main.js"))
+      (io/copy (io/file "target/public/paren-soup.js") (io/file "resources/public/paren-soup.js"))
+      (io/copy (io/file "target/public/codemirror.js") (io/file "resources/public/codemirror.js"))
+      (io/copy (io/file "target/public/loading.js") (io/file "resources/public/loading.js")))))
 
 (deftask local []
   (set-env! :resource-paths #{"src/clj" "src/cljs"})

@@ -6,9 +6,10 @@
         eval-soup {:mvn/version "1.4.1"}
         org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
         org.clojure/tools.reader {:mvn/version "1.2.1"}
-        nightcode {:mvn/version "2.5.7"
+        nightcode {:mvn/version "2.5.8"
                    :exclusions [leiningen
                                 play-cljs/lein-template
+                                edna/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]}
         dynadoc {:mvn/version "1.4.5"
                  :exclusions [javax.xml.bind/jaxb-api rum paren-soup]}

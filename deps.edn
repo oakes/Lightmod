@@ -10,6 +10,7 @@
                    :exclusions [leiningen
                                 play-cljs/lein-template
                                 edna/lein-template
+                                edna
                                 org.eclipse.jgit/org.eclipse.jgit]}
         dynadoc {:mvn/version "1.4.5"
                  :exclusions [javax.xml.bind/jaxb-api rum paren-soup]}

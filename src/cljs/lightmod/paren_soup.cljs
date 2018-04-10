@@ -16,7 +16,7 @@
     (when (= (count results) (count locations))
       (-> instarepl
           .-innerHTML
-          (set! (ir/results->html results locations))))))
+          (set! (ir/results->html results locations 10000))))))
 
 (gobj/set js/window "setInstaRepl" set-instarepl)
 

@@ -12,7 +12,7 @@
                                 edna/lein-template
                                 edna
                                 org.eclipse.jgit/org.eclipse.jgit]}
-        dynadoc {:mvn/version "1.4.6"
+        dynadoc {:mvn/version "1.4.7"
                  :exclusions [org.clojure/clojurescript rum paren-soup]}
         ; make sure the rest of this is in the boot template
         ; so exported projects have the same deps
@@ -36,5 +36,5 @@
         org.clojure/java.jdbc {:mvn/version "0.7.3"}
         com.h2database/h2 {:mvn/version "1.4.196"}
         honeysql {:mvn/version "0.9.1"}}
- :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.12.2"}
+ :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.12.3"}
                                cljsjs/codemirror {:mvn/version "5.24.0-1"}}}}}

@@ -66,7 +66,7 @@
                  (.setGraphic nil)
                  (.initOwner (.getWindow scene))
                  (.initModality Modality/WINDOW_MODAL))]
-    (when-let [project-name (some-> dialog .showAndWait (.orElse nil) lu/sanitize-name)]
+    (when-let [project-name (some-> dialog .showAndWait (.orElse nil) u/sanitize-name)]
       (when-let [projects-dir (:projects-dir @*runtime-state)]
         (let [dir-name (str/replace project-name "-" "_")
               dir (io/file projects-dir dir-name)]

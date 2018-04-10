@@ -20,16 +20,6 @@
 (defn current-project? [dir]
   (= dir (.getCanonicalPath (get-project-dir))))
 
-(defn sanitize-name [s]
-  (as-> s $
-        (str/trim $)
-        (str/lower-case $)
-        (str/replace $ "'" "")
-        (str/replace $ #"[^a-z0-9]" " ")
-        (str/split $ #" ")
-        (remove empty? $)
-        (str/join "-" $)))
-
 (defn copy-from-resources! [from to]
   (let [dest (io/file to ".out" from)]
     (when-not (.exists dest)

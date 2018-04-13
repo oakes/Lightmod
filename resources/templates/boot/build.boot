@@ -22,7 +22,8 @@
                   [com.taoensso/sente "1.11.0"]
                   [org.clojure/java.jdbc "0.7.3"]
                   [com.h2database/h2 "1.4.196"]
-                  [honeysql "0.9.1"]])
+                  [honeysql "0.9.1"]
+                  [edna "1.0.0"]])
 
 (task-options!
   pom {:project '[[name]]

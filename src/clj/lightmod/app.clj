@@ -51,7 +51,7 @@
                  (doseq [f (lu/get-files-in-dep-order dir)]
                    (load-file (.getCanonicalPath f)))))
              (not (:dev? @*runtime-state))
-             (-> es/wrap-security (es/wrap-timeout timeout))
+             es/wrap-security
              true
              (apply []))
      {:type :visual-clj}

@@ -6,7 +6,7 @@
                   [nightlight "RELEASE" :scope "test"]
                   ; project deps
                   [org.clojure/clojure "1.9.0"]
-                  [org.clojure/clojurescript "1.9.946"]
+                  [org.clojure/clojurescript "1.10.238"]
                   [org.clojure/core.async "0.3.443"]
                   [org.clojure/data.json "0.2.6"]
                   [org.clojure/tools.cli "0.3.5"]

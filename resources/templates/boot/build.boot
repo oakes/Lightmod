@@ -23,7 +23,7 @@
                   [org.clojure/java.jdbc "0.7.3"]
                   [com.h2database/h2 "1.4.196"]
                   [honeysql "0.9.1"]
-                  [edna "1.3.0"]])
+                  [edna "1.4.0"]])
 
 (task-options!
   pom {:project '[[name]]

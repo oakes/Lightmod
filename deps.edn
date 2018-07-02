@@ -36,6 +36,7 @@
         org.clojure/java.jdbc {:mvn/version "0.7.3"}
         com.h2database/h2 {:mvn/version "1.4.196"}
         honeysql {:mvn/version "0.9.1"}
-        edna {:mvn/version "1.4.0"}}
+        edna {:mvn/version "1.5.1"
+              :exclusions [org.bitbucket.daveyarwood/fluid-r3]}}
  :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.13.2"}
                                cljsjs/codemirror {:mvn/version "5.31.0-0"}}}}}

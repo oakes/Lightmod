@@ -36,7 +36,7 @@
         org.clojure/java.jdbc {:mvn/version "0.7.3"}
         com.h2database/h2 {:mvn/version "1.4.196"}
         honeysql {:mvn/version "0.9.1"}
-        edna {:mvn/version "1.5.1"
+        edna {:mvn/version "1.5.3"
               ;; fluid-r3 would add over 100MB to the size of the jar file.
               ;; we can safely exclude it, because edna will fall back
               ;; on a smaller soundfont

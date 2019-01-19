@@ -156,7 +156,7 @@
   (let [*env (env/default-compiler-env)]
     (swap! *runtime-state assoc
       :web-port (start-web-server!)
-      :doc-port (-> {:port 0 :*cljs-env *env :disable-update-checker? true}
+      :doc-port (-> {:port 0 :*cljs-env *env}
                     dyn/start
                     meta
                     :local-port)

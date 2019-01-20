@@ -1,6 +1,6 @@
 {:paths ["src/clj" "src/cljs" "resources"]
  :deps {org.clojure/clojure {:mvn/version "1.10.0"}
-        org.clojure/clojurescript {:mvn/version "1.10.312"}
+        org.clojure/clojurescript {:mvn/version "1.10.439"}
         adzerk/boot-reload {:mvn/version "0.6.0"}
         hawk {:mvn/version "0.2.11"}
         eval-soup {:mvn/version "1.4.3"}
@@ -12,7 +12,7 @@
                                 edna/lein-template
                                 edna
                                 org.eclipse.jgit/org.eclipse.jgit]}
-        dynadoc {:mvn/version "1.5.0"
+        dynadoc {:mvn/version "1.5.1"
                  :exclusions [org.clojure/clojurescript rum paren-soup]}
         ; make sure the rest of this is in the boot template
         ; so exported projects have the same deps

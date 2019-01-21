@@ -14,6 +14,9 @@
                                 org.eclipse.jgit/org.eclipse.jgit]}
         dynadoc {:mvn/version "1.5.1"
                  :exclusions [org.clojure/clojurescript rum paren-soup]}
+        org.openjfx/javafx-base {:mvn/version "11.0.1"}
+        org.openjfx/javafx-fxml {:mvn/version "11.0.1"}
+        org.openjfx/javafx-web {:mvn/version "11.0.1"}
         ; make sure the rest of this is in the boot template
         ; so exported projects have the same deps
         org.clojure/core.async {:mvn/version "0.4.490"}

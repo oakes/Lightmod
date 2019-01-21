@@ -25,7 +25,7 @@
     (when-not (.exists dest)
       (.mkdirs (.getParentFile dest))
       (spit dest (slurp (io/resource from))))
-    (str (-> to io/file .getName) "/.out/" from)))
+    (.getCanonicalPath dest)))
 
 (defn path->ns [path leaf-name]
   (-> path io/file .getName (str/replace #"_" "-") (str "." leaf-name)))

@@ -76,17 +76,14 @@
                      :requires ["p5.core"]}
                     {:file "cljsjs/react/development/react.inc.js"
                      :provides ["react" "cljsjs.react"]
-                     :file-min ".out/cljsjs/react/production/react.min.inc.js"
                      :global-exports '{react React}}
                     {:file "cljsjs/create-react-class/development/create-react-class.inc.js"
                      :provides ["cljsjs.create-react-class" "create-react-class"]
                      :requires ["react"]
-                     :file-min "cljsjs/create-react-class/production/create-react-class.min.inc.js"
                      :global-exports '{create-react-class createReactClass}}
                     {:file "cljsjs/react-dom/development/react-dom.inc.js"
                      :provides ["react-dom" "cljsjs.react.dom"]
                      :requires ["react"]
-                     :file-min "cljsjs/react-dom/production/react-dom.min.inc.js"
                      :global-exports '{react-dom ReactDOM}}])
    :externs (mapv #(lu/copy-from-resources! % dir)
               ["cljsjs/react/common/react.ext.js"

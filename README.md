@@ -2,7 +2,7 @@
 
 ## Introduction
 
-Lightmod is an all-in-one tool for full stack Clojure. Do `boot run` for development and `boot build` to make a jar file. To build, JDK 8 or above is required. On Linux, you'll also need to install the `openjfx` package.
+Lightmod is an all-in-one tool for full stack Clojure. Do `boot run` for development and `boot build` to make a jar file. To build, JDK 11 or above is required.
 
 ## Licensing
 

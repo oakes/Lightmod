@@ -42,8 +42,9 @@
        :url "https://github.com/oakes/Lightmod"
        :license {"Public Domain" "http://unlicense.org/UNLICENSE"}}
   push {:repo "clojars"}
-  aot {:namespace '#{lightmod.core}}
-  jar {:main 'lightmod.core
+  aot {:namespace '#{lightmod.start
+                     lightmod.core}}
+  jar {:main 'lightmod.start
        :manifest {"Description" "An all-in-one tool for full stack Clojure"
                   "Url" "https://github.com/oakes/Lightmod"}
        :file "project.jar"})

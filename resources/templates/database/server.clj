@@ -14,7 +14,7 @@
 ; defines basic parameters for the database
 (def db-spec
   {:dbtype "h2"
-   :dbname "./[[dir]]/main"
+   :dbname (.getCanonicalPath (io/file (System/getProperty "user.dir") "[[dir]]" "main"))
    :user "admin"
    :password ""})
 

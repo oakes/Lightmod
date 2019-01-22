@@ -3,6 +3,7 @@
   :dependencies '[[adzerk/boot-cljs "2.1.5" :scope "test"]
                   [adzerk/boot-reload "0.6.0" :scope "test"]
                   [nightlight "RELEASE" :scope "test"]
+                  [org.clojure/test.check "0.9.0" :scope "test"]
                   ; project deps
                   [org.clojure/clojure "1.10.0"]
                   [org.clojure/clojurescript "1.10.439"]

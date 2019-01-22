@@ -121,6 +121,7 @@
                 (swap! assoc :selection nil)
                 (swap! assoc :selection selection)))))))
     ; check for updates
+    #_
     (when-not (:dev? @*runtime-state)
       (future
         (try

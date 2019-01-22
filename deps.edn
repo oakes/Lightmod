@@ -6,7 +6,7 @@
         eval-soup {:mvn/version "1.4.3"}
         org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
         org.clojure/tools.reader {:mvn/version "1.2.1"}
-        nightcode {:mvn/version "2.6.0"
+        nightcode {:mvn/version "2.7.0"
                    :exclusions [leiningen
                                 play-cljs/lein-template
                                 edna/lein-template
@@ -14,9 +14,6 @@
                                 org.eclipse.jgit/org.eclipse.jgit]}
         dynadoc {:mvn/version "1.5.1"
                  :exclusions [org.clojure/clojurescript rum paren-soup]}
-        org.openjfx/javafx-base {:mvn/version "11.0.2"}
-        org.openjfx/javafx-fxml {:mvn/version "11.0.2"}
-        org.openjfx/javafx-web {:mvn/version "11.0.2"}
         ; make sure the rest of this is in the boot template
         ; so exported projects have the same deps
         org.clojure/core.async {:mvn/version "0.4.490"}

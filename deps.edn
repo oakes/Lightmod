@@ -10,7 +10,6 @@
                    :exclusions [leiningen
                                 play-cljs/lein-template
                                 edna/lein-template
-                                edna
                                 org.eclipse.jgit/org.eclipse.jgit]}
         dynadoc {:mvn/version "1.5.1"
                  :exclusions [org.clojure/clojurescript rum paren-soup]}

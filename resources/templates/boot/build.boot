@@ -16,7 +16,7 @@
                   [reagent "0.8.0-alpha2"]
                   [cljs-react-material-ui "0.2.50"]
                   [rum "0.11.3"]
-                  [play-cljs "1.2.0"]
+                  [play-cljs "1.3.1"]
                   [bidi "2.1.3"]
                   [com.rpl/specter "1.0.4"]
                   [com.taoensso/sente "1.11.0"]

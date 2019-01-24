@@ -69,11 +69,9 @@
    :asset-path ".out"
    :preloads '[lightmod.init]
    :foreign-libs (mapv #(update % :file lu/copy-from-resources! dir)
-                   [{:file "js/p5.js"
-                     :provides ["p5.core"]}
-                    {:file "js/p5.tiledmap.js"
+                   [{:file "js/p5.tiledmap.js"
                      :provides ["p5.tiled-map"]
-                     :requires ["p5.core"]}
+                     :requires ["cljsjs.p5"]}
                     {:file "cljsjs/react/development/react.inc.js"
                      :provides ["react" "cljsjs.react"]
                      :global-exports '{react React}}

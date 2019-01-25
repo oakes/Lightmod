@@ -20,7 +20,7 @@
 <?import javafx.scene.text.Font?>
 <?import javafx.scene.web.WebView?>
 
-<TabPane fx:id="projects" prefHeight="634.0" prefWidth="872.0" xmlns="http://javafx.com/javafx/8.0.141" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lightmod.controller">
+<TabPane fx:id="projects" prefHeight="634.0" prefWidth="872.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="lightmod.controller">
   <tabs>
     <Tab closable="false" text="Home">
          <content>
@@ -104,23 +104,23 @@
                                  </font></Label>
                            </graphic>
                         </Button>
-                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewBasicGame" prefHeight="200.0" prefWidth="200.0" text="Basic Game" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewBasicGame" prefHeight="200.0" prefWidth="200.0" text="Game" textAlignment="CENTER" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
                            <graphic>
-                              <Label maxWidth="175.0" text="A barebones game with play-cljs" textAlignment="CENTER" wrapText="true">
+                              <Label maxWidth="175.0" text="A simple game with play-cljs" textAlignment="CENTER" wrapText="true">
                                  <font>
                                     <Font size="12.0" />
                                  </font></Label>
                            </graphic>
                         </Button>
-                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewPlatformerGame" prefHeight="200.0" prefWidth="200.0" text="Platformer Game" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                        <Button alignment="CENTER" contentDisplay="BOTTOM" mnemonicParsing="false" onAction="#onNewMusic" prefHeight="200.0" prefWidth="200.0" text="Music" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                            <font>
                               <Font size="20.0" />
                            </font>
                            <graphic>
-                              <Label maxWidth="175.0" text="Move a character across a tiled map with play-cljs" textAlignment="CENTER" wrapText="true">
+                              <Label maxWidth="175.0" text="Turn code into music with edna" textAlignment="CENTER" wrapText="true">
                                  <font>
                                     <Font size="12.0" />
                                  </font></Label>

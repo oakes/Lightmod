@@ -6,12 +6,17 @@
             [ring.middleware.params :refer [wrap-params]]
             [ring.middleware.reload :refer [wrap-reload]]
             [ring.middleware.resource :refer [wrap-resource]]
-            [ring.util.response :refer [not-found]])
+            [ring.util.response :refer [not-found]]
+            [[[name]].music :as music])
   (:gen-class))
 
 ; runs when any request is received
 (defn handler [{:keys [uri] :as request}]
-  (or ; if the request is a static file
+  (or ; if the request is for the music file
+      (when (= "/music.wav" uri)
+        {:status 200
+         :body (io/input-stream (music/generate))})
+      ; if the request is a static file
       (let [file (io/file (System/getProperty "user.dir") (str "." uri))]
         (when (.isFile file)
           {:status 200

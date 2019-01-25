@@ -20,7 +20,7 @@
              [onNewChatApp [javafx.event.ActionEvent] void]
              [onNewDatabaseApp [javafx.event.ActionEvent] void]
              [onNewBasicGame [javafx.event.ActionEvent] void]
-             [onNewPlatformerGame [javafx.event.ActionEvent] void]
+             [onNewMusic [javafx.event.ActionEvent] void]
              [onNewIsomorphicApp [javafx.event.ActionEvent] void]
              [onUp [javafx.event.ActionEvent] void]
              [onSave [javafx.event.ActionEvent] void]
@@ -91,8 +91,8 @@
 (defn -onNewBasicGame [this ^ActionEvent event]
   (-> event .getSource .getScene (new-project! :basic-game)))
 
-(defn -onNewPlatformerGame [this ^ActionEvent event]
-  (-> event .getSource .getScene (new-project! :platformer-game)))
+(defn -onNewMusic [this ^ActionEvent event]
+  (-> event .getSource .getScene (new-project! :music)))
 
 (defn -onNewIsomorphicApp [this ^ActionEvent event]
   (-> event .getSource .getScene (new-project! :isomorphic)))

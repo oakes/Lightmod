@@ -11,7 +11,7 @@
                                 play-cljs/lein-template
                                 edna/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]}
-        dynadoc {:mvn/version "1.5.2"
+        dynadoc {:mvn/version "1.5.3"
                  :exclusions [org.clojure/clojurescript rum paren-soup]}
         ; make sure the rest of this is in the boot template
         ; so exported projects have the same deps

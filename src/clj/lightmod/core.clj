@@ -150,7 +150,7 @@
       (aget 0)
       .getLocalPort))
 
-(defn -main [& args]
+(defn main []
   (when (= "Linux" (System/getProperty "os.name"))
     (System/setProperty "prism.lcdtext" "false")
     (System/setProperty "prism.text" "t2k"))
@@ -162,9 +162,9 @@
                     meta
                     :local-port)
       :*env *env))
-  (Application/launch lightmod.core (into-array String args)))
+  (Application/launch lightmod.core (into-array String [])))
 
 (defn dev-main []
   (swap! *runtime-state assoc :dev? true)
-  (-main))
+  (main))
 

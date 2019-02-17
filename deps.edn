@@ -1,4 +1,4 @@
-{:paths ["src/clj" "src/cljs" "resources"]
+{:paths ["src/clj" "src/cljs" "resources" "classes"]
  :deps {org.clojure/clojure {:mvn/version "1.10.0"}
         org.clojure/clojurescript {:mvn/version "1.10.520"}
         adzerk/boot-reload {:mvn/version "0.6.0"}
@@ -41,4 +41,7 @@
               ;; on a smaller soundfont
               :exclusions [org.bitbucket.daveyarwood/fluid-r3]}}
  :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.14.3"}
-                               cljsjs/codemirror {:mvn/version "5.40.2-1"}}}}}
+                               cljsjs/codemirror {:mvn/version "5.40.2-1"}}
+                  :extra-paths ["src/cljs" "dev-resources"]}
+           :dev {:extra-deps {orchestra {:mvn/version "2018.12.06-2"}
+                              expound {:mvn/version "0.7.2"}}}}}

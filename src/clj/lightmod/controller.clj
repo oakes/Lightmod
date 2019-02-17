@@ -50,7 +50,7 @@
                          edn/read-string)
           :let [from (io/resource (str "templates/" (name project-type) "/" file-name))
                 dest (io/file dir file-name)]]
-    (if (-> file-name u/get-extension #{"clj" "cljs" "cljc" "boot"})
+    (if (-> file-name u/get-extension #{"clj" "cljs" "cljc" "edn"})
       (spit dest
         (-> (slurp from)
             (str/replace "[[name]]" project-name)
@@ -308,24 +308,30 @@
 
 ; export
 
+(defmacro read-deps-edn []
+  (let [deps (-> "deps.edn" slurp clojure.edn/read-string)
+        app-deps (get-in deps [:aliases :app :extra-deps])
+        app-dev-deps (get-in deps [:aliases :app-dev :extra-deps])]
+    (with-out-str
+      (clojure.pprint/pprint
+        {:paths ["src" "resources" "target"]
+         :deps app-deps
+         :aliases {:dev {:extra-deps app-dev-deps}}}))))
+
 (defn export! [^Scene scene]
   (when-let [project (lu/get-project-dir)]
     (when (u/show-warning! scene "Export Project"
-            "This will generate a Boot project for you. See boot-clj.com for details.")
+            "This will generate a Clojure CLI project. See clojure.org/guides/getting_started for details.")
       (let [project-name (str/replace (.getName project) "_" "-")
             chooser (doto (FileChooser.)
                       (.setTitle "Export Project")
                       (.setInitialFileName project-name))]
         (when-let [dir (.showSaveDialog chooser (.getWindow scene))]
-          (apply-template! dir :boot project-name (.getName project))
+          (apply-template! dir :export project-name (.getName project))
           (let [res (doto (io/file dir "resources" (.getName project))
                       .mkdirs)
                 src (doto (io/file dir "src" (.getName project))
                       .mkdirs)
-                dev-res (doto (io/file dir "dev-resources" (.getName project))
-                          .mkdirs)
-                prod-res (doto (io/file dir "prod-resources" (.getName project))
-                           .mkdirs)
                 copy-file! (fn [f]
                              (let [rel-path (u/get-relative-path (.getCanonicalPath project) (.getCanonicalPath f))
                                    dest (io/file
@@ -334,19 +340,14 @@
                                           rel-path)]
                                (.mkdirs (.getParentFile dest))
                                (io/copy f dest)))]
-            (spit (io/file dev-res "main.cljs.edn")
-              (with-out-str
-                (clojure.pprint/pprint
-                  {:require  ['nightlight.repl-server
-                              (symbol (str project-name ".client"))]
-                   :init-fns ['cljs.spec.test.alpha/instrument]
-                   :compiler-options {}})))
-            (spit (io/file prod-res "main.cljs.edn")
-              (with-out-str
-                (clojure.pprint/pprint
-                  {:require  [(symbol (str project-name ".client"))]
-                   :init-fns []
-                   :compiler-options {:infer-externs true}})))
+            (spit (io/file dir "deps.edn") (read-deps-edn))
+            (spit (io/file res "dev.cljs")
+                  (with-out-str
+                    (clojure.pprint/pprint
+                      (list 'ns (symbol (str project-name ".dev"))
+                        (list :require
+                              [(symbol (str project-name ".client"))]
+                              ['nightlight.repl-server])))))
             (doseq [f (.listFiles project)
                     :when (and (-> f .getName (.startsWith ".") not)
                                (-> f .getName (not= "main.js")))]

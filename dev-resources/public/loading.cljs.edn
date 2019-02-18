@@ -1,3 +1,0 @@
-{:require  [lightmod.loading]
- :init-fns []
- :compiler-options {:optimizations :advanced}}

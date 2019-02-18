@@ -1,4 +1,4 @@
-{:paths ["src/clj" "src/cljs" "resources" "classes"]
+{:paths ["src/clj" "resources" "classes"]
  :deps {adzerk/boot-reload {:mvn/version "0.6.0"}
         hawk {:mvn/version "0.2.11"}
         eval-soup {:mvn/version "1.5.0"}

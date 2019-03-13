@@ -9,7 +9,7 @@
                                 play-cljs/lein-template
                                 edna/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]}
-        dynadoc {:mvn/version "1.6.0"
+        dynadoc {:mvn/version "1.6.1"
                  :exclusions [rum paren-soup]}}
  :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.14.3"}
                                cljsjs/codemirror {:mvn/version "5.40.2-1"}}

@@ -309,14 +309,12 @@
 ; export
 
 (defmacro read-deps-edn []
-  (let [deps (-> "deps.edn" slurp clojure.edn/read-string)
-        app-deps (get-in deps [:aliases :app :extra-deps])
-        app-dev-deps (get-in deps [:aliases :app-dev :extra-deps])]
+  (let [deps (-> "deps.edn" slurp clojure.edn/read-string)]
     (with-out-str
       (clojure.pprint/pprint
         {:paths ["src" "resources" "target"]
-         :deps app-deps
-         :aliases {:dev {:extra-deps app-dev-deps}}}))))
+         :deps (get-in deps [:aliases :app :extra-deps])
+         :aliases (select-keys (:aliases deps) [:dev :prod])}))))
 
 (defn export! [^Scene scene]
   (when-let [project (lu/get-project-dir)]

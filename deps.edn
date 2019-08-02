@@ -10,7 +10,8 @@
                                 edna/lein-template
                                 org.eclipse.jgit/org.eclipse.jgit]}
         dynadoc {:mvn/version "1.6.5"
-                 :exclusions [rum paren-soup]}}
+                 :exclusions [rum/rum
+                              paren-soup/paren-soup]}}
  :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.14.3"}
                                cljsjs/codemirror {:mvn/version "5.40.2-1"}}
                   :extra-paths ["src/cljs" "dev-resources"]

@@ -13,12 +13,15 @@
                  :exclusions [rum paren-soup]}}
  :aliases {:cljs {:extra-deps {paren-soup {:mvn/version "2.14.3"}
                                cljsjs/codemirror {:mvn/version "5.40.2-1"}}
-                  :extra-paths ["src/cljs" "dev-resources"]}
+                  :extra-paths ["src/cljs" "dev-resources"]
+                  :main-opts ["cljs.clj"]}
            :dev {:extra-deps {orchestra {:mvn/version "2018.12.06-2"}
                               expound {:mvn/version "0.7.2"}
                               nightlight {:mvn/version "RELEASE"}
-                              com.bhauman/figwheel-main {:mvn/version "0.2.0"}}}
-           :prod {:extra-deps {leiningen {:mvn/version "2.9.0"}}}
+                              com.bhauman/figwheel-main {:mvn/version "0.2.0"}}
+                 :main-opts ["dev.clj"]}
+           :prod {:extra-deps {leiningen {:mvn/version "2.9.0"}}
+                  :main-opts ["prod.clj"]}
            :app {:extra-deps {org.clojure/clojure {:mvn/version "1.10.0"}
                               org.clojure/clojurescript {:mvn/version "1.10.439"}
                               org.clojure/core.async {:mvn/version "0.4.490"}

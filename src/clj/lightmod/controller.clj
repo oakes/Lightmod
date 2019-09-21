@@ -313,8 +313,7 @@
     (with-out-str
       (clojure.pprint/pprint
         {:paths ["src" "resources" "target"]
-         :deps (get-in deps [:aliases :app :extra-deps])
-         :aliases (select-keys (:aliases deps) [:dev :prod])}))))
+         :aliases (select-keys (:aliases deps) [:dev :prod :app])}))))
 
 (defn export! [^Scene scene]
   (when-let [project (lu/get-project-dir)]

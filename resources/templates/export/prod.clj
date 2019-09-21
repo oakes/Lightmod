@@ -39,7 +39,7 @@
      :resource-paths paths}))
 
 (def project (-> (read-project-clj)
-                 (merge (read-deps-edn []))
+                 (merge (read-deps-edn [:app]))
                  p/init-project))
 
 (defn delete-children-recursively! [f]

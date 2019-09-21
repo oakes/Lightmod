@@ -72,6 +72,8 @@
                    [{:file "js/p5.tiledmap.js"
                      :provides ["p5.tiled-map"]
                      :requires ["cljsjs.p5"]}
+                    {:file "cljsjs/p5/development/p5.inc.js"
+                     :provides ["cljsjs.p5"]}
                     {:file "cljsjs/react/development/react.inc.js"
                      :provides ["react" "cljsjs.react"]
                      :global-exports '{react React}}

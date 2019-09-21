@@ -38,7 +38,7 @@
 
 (defn -start [^lightmod.core app ^Stage stage]
   (let [root (FXMLLoader/load (io/resource "main.fxml"))
-        scene (Scene. root 1242 768)
+        scene (Scene. root 1200 600)
         projects (.lookup scene "#projects")
         projects-dir (io/file (System/getProperty "user.home") "LightmodProjects")]
     (intern 'nightcode.shortcuts 'show-tooltip! (fn [& _])) ; don't show tooltips for now

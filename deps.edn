@@ -23,7 +23,7 @@
                  :main-opts ["dev.clj"]}
            :prod {:extra-deps {leiningen {:mvn/version "2.9.0"}}
                   :main-opts ["prod.clj"]}
-           :app {:extra-deps {org.clojure/clojure {:mvn/version "1.10.0"}
+           :app {:extra-deps {org.clojure/clojure {:mvn/version "1.10.1"}
                               org.clojure/clojurescript {:mvn/version "1.10.439"}
                               org.clojure/core.async {:mvn/version "0.4.490"}
                               org.clojure/data.json {:mvn/version "0.2.6"}

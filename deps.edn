@@ -3,16 +3,26 @@
         hawk {:mvn/version "0.2.11"}
         eval-soup {:mvn/version "1.5.0"}
         org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
-        nightcode {:mvn/version "2.8.0"
+        nightcode {:mvn/version "2.8.1"
                    :exclusions [leiningen/leiningen
                                 org.eclipse.jgit/org.eclipse.jgit]}
         dynadoc {:mvn/version "1.6.5"
                  :exclusions [rum/rum
-                              paren-soup/paren-soup]}}
+                              paren-soup/paren-soup]}
+        org.openjfx/javafx-base {:mvn/version "13"}
+        org.openjfx/javafx-fxml {:mvn/version "13"}
+        org.openjfx/javafx-graphics {:mvn/version "13"}
+        org.openjfx/javafx-web {:mvn/version "13"}}
  :aliases {:cljs {:extra-deps {leiningen {:mvn/version "2.9.0"}
                                paren-soup {:mvn/version "2.15.6"}}
                   :extra-paths ["src/cljs" "dev-resources"]
                   :main-opts ["cljs.clj"]}
+           :windows {:extra-deps {org.openjfx/javafx-graphics$win {:mvn/version "13"}
+                                  org.openjfx/javafx-web$win {:mvn/version "13"}}}
+           :macos {:extra-deps {org.openjfx/javafx-graphics$mac {:mvn/version "13"}
+                                org.openjfx/javafx-web$mac {:mvn/version "13"}}}
+           :linux {:extra-deps {org.openjfx/javafx-graphics$linux {:mvn/version "13"}
+                                org.openjfx/javafx-web$linux {:mvn/version "13"}}}
            :dev {:extra-deps {orchestra {:mvn/version "2018.12.06-2"}
                               expound {:mvn/version "0.7.2"}
                               nightlight {:mvn/version "RELEASE"}

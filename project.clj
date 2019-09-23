@@ -1,4 +1,4 @@
-(defproject lightmod "1.4.1"
+(defproject lightmod "1.4.2-SNAPSHOT"
   :description "An all-in-one tool for full stack Clojure"
   :url "https://github.com/oakes/Lightmod"
   :license {:name "Public Domain"

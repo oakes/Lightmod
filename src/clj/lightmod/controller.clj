@@ -312,7 +312,7 @@
   (let [deps (-> "deps.edn" slurp clojure.edn/read-string)]
     (with-out-str
       (clojure.pprint/pprint
-        {:paths ["src" "resources" "target"]
+        {:paths ["src" "resources"]
          :aliases (select-keys (:aliases deps) [:dev :prod :app])}))))
 
 (defn export! [^Scene scene]

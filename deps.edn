@@ -14,7 +14,7 @@
         org.openjfx/javafx-graphics {:mvn/version "13"}
         org.openjfx/javafx-web {:mvn/version "13"}}
  :aliases {:cljs {:extra-deps {leiningen {:mvn/version "2.9.0"}
-                               paren-soup {:mvn/version "2.15.6"}}
+                               paren-soup {:mvn/version "2.16.0"}}
                   :extra-paths ["src/cljs" "dev-resources"]
                   :main-opts ["cljs.clj"]}
            :windows {:extra-deps {org.openjfx/javafx-graphics$win {:mvn/version "13"}
@@ -40,7 +40,7 @@
                               http-kit {:mvn/version "2.3.0"}
                               ring {:mvn/version "1.7.1"}
                               ring/ring-core {:mvn/version "1.7.1"}
-                              reagent {:mvn/version "0.8.0-alpha2"}
+                              reagent {:mvn/version "0.8.1"}
                               cljs-react-material-ui {:mvn/version "0.2.50"
                                                       :exclusions [org.clojure/clojure
                                                                    org.clojure/clojurescript

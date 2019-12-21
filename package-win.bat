@@ -1,1 +1,1 @@
-javapackager -deploy --add-modules java.xml.bind -native exe -outdir package -outfile Lightmod -srcdir target -appclass lightmod.core -name "Lightmod" -title "Lightmod" -Bicon=package/windows/Lightmod.ico -BappVersion=%1
+jpackage --type exe --name Lightmod --app-version %1 --input target --main-jar Lightmod-%1-windows.jar --icon package/windows/Lightmod.ico --copyright "Public Domain" --win-menu --win-per-user-install

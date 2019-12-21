@@ -54,6 +54,9 @@
     (throw (ex-info "Invalid OS name provided" {})))
   (let [project (-> (read-project-clj)
                     (merge (read-deps-edn [:app (keyword os-name)]))
+                    (assoc
+                      :aot '[lightmod.start lightmod.core]
+                      :main 'lightmod.start)
                     p/init-project)]
     (clean project)
     (uberjar project))

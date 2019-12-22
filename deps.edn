@@ -3,7 +3,7 @@
         hawk {:mvn/version "0.2.11"}
         eval-soup {:mvn/version "1.5.0"}
         org.clojure/tools.namespace {:mvn/version "0.3.0-alpha4"}
-        nightcode {:mvn/version "2.8.2"
+        nightcode {:mvn/version "2.8.3"
                    :exclusions [leiningen/leiningen
                                 org.eclipse.jgit/org.eclipse.jgit]}
         dynadoc {:mvn/version "1.6.5"

@@ -339,7 +339,7 @@
                                (.mkdirs (.getParentFile dest))
                                (io/copy f dest)))]
             (spit (io/file dir "deps.edn") (read-deps-edn))
-            (spit (io/file res "dev.cljs")
+            (spit (io/file src "dev.cljs")
                   (with-out-str
                     (clojure.pprint/pprint
                       (list 'ns (symbol (str project-name ".dev"))

@@ -7,7 +7,7 @@
       port (-> server meta :local-port)
       url (str "http://localhost:" port "/index.html")]
   (println "Started app on" url)
-  (nightlight/start {:port 4000 :url url}))
-
-(figwheel/-main "--build" "dev")
+  (nightlight/start {:port 4000 :url url})
+  (spit "figwheel-main.edn" (pr-str {:open-url url}))
+  (figwheel/-main "--build" "dev"))
 

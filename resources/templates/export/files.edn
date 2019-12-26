@@ -1,5 +1,6 @@
 ["project.clj"
  "dev.clj"
  "dev.cljs.edn"
+ "figwheel-main.edn"
  "prod.clj"
  "README.md"]

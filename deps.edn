@@ -28,7 +28,8 @@
            :dev {:extra-deps {orchestra {:mvn/version "2018.12.06-2"}
                               expound {:mvn/version "0.7.2"}
                               nightlight {:mvn/version "RELEASE"}
-                              com.bhauman/figwheel-main {:mvn/version "0.2.0"}}
+                              com.bhauman/figwheel-main {:mvn/version "0.2.0"}
+                              org.clojure/clojurescript {:mvn/version "1.10.439"}}
                  :main-opts ["dev.clj"]}
            :prod {:extra-deps {leiningen {:mvn/version "2.9.0"}
                                org.clojure/clojurescript {:mvn/version "1.10.439"}}

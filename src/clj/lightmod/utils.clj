@@ -4,7 +4,6 @@
             [clojure.set :as set]
             [nightcode.state :refer [*pref-state *runtime-state]]
             [nightcode.utils :as u]
-            [clojure.tools.namespace.find :as find]
             [clojure.tools.namespace.file :as file]
             [clojure.tools.namespace.track :as track]))
 

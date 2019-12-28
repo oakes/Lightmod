@@ -13,13 +13,10 @@
             [lightmod.repl :as lrepl]
             [lightmod.ui :as ui]
             [lightmod.utils :as lu]
-            [eval-soup.core :as es]
             [clojure.core.async :refer [chan sliding-buffer put! <!! go-loop]]
             [cljs.env :as env])
   (:import [javafx.application Platform]
            [javafx.event EventHandler]))
-
-(def timeout 5000)
 
 (defn send-message! [project-pane dir msg]
   (when (lu/current-project? dir)
@@ -45,15 +42,10 @@
      (when-not (.exists (io/file dir "server.clj"))
        (throw (Exception. "You must have a server.clj file.")))
      (lu/check-namespaces! dir true)
-     (cond-> (fn []
-               (if file-path
-                 (load-file file-path)
-                 (doseq [f (lu/get-files-in-dep-order dir)]
-                   (load-file (.getCanonicalPath f)))))
-             (not (:dev? @*runtime-state))
-             es/wrap-security
-             true
-             (apply []))
+     (if file-path
+       (load-file file-path)
+       (doseq [f (lu/get-files-in-dep-order dir)]
+         (load-file (.getCanonicalPath f))))
      {:type :visual-clj}
      (catch Exception e
        (.printStackTrace e)
@@ -128,11 +120,7 @@
     (let [-main (resolve (symbol (lu/path->ns dir "server") "-main"))]
       (when (nil? -main)
         (throw (Exception. "Can't find a -main function in your server.clj file.")))
-      (let [server (cond-> -main
-                           (not (:dev? @*runtime-state))
-                           (-> es/wrap-security (es/wrap-timeout timeout))
-                           true
-                           (apply []))]
+      (let [server (-main)]
         (when-not (and (fn? server)
                        (-> server meta :local-port number?))
           (throw (Exception. "The -main function in server.clj must call run-server as its last step.")))
